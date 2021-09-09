@@ -1,0 +1,29 @@
+<!--This file launches either an image or a video publisher and a preprocessor--> 
+<launch>
+  <!-- <arg name="rate" default="15"/> -->
+  <!-- <arg name="video" default="false"/> -->
+  <arg name="debug" default="true"/>
+  <arg name="simulation" default="false"/>
+  <arg name="world" default="serf"/>
+  <arg name="camera_name" default="/hbv_1615"/>
+
+  <!-- Camera calibration -->
+  <include file="$(find desiccation_cnn)/launch/calibration.launch">
+    <arg name="camera_name" default="$(arg camera_name)"/>
+  </include>
+
+  <!-- Simulation or rosbag -->
+  <include unless="$(arg simulation)" file="$(find desiccation_cnn)/launch/source.launch">
+    <!-- rosbag include -->
+  </include>
+
+  <!-- Simulation -->
+  <include if="$(arg simulation)" file="$(find desiccation_cnn)/launch/simulation.launch">
+      <arg name="world" value="$(arg world)"/>
+  </include>
+  <!-- Using default values -->
+  <include if="$(arg simulation)" file="$(find uas_offboard_planner)/launch/hardware_control.launch"/>
+
+
+  
+</launch>

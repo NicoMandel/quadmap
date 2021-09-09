@@ -12,6 +12,7 @@ find_package(catkin REQUIRED COMPONENTS
   desiccation_msgs
   learning_image_geometry
   uas_gazebo_sim
+  uas_offboard_planner
 )
 
 ## System dependencies are found with CMake's conventions
