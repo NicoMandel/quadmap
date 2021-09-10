@@ -1,22 +1,28 @@
-<!--This file launches either an image or a video publisher and a preprocessor--> 
+<!--This file launches either a bag or a simulation and the point-cloud converter.--> 
+<!--  Newtorks can be launched through the desiccation_cnn package -->
+<!--  -->
 <launch>
-  <!-- <arg name="rate" default="15"/> -->
-  <!-- <arg name="video" default="false"/> -->
   <arg name="debug" default="true"/>
   <arg name="simulation" default="false"/>
   <arg name="world" default="serf"/>
-  <arg name="camera_name" default="/hbv_1615"/>
+  <arg name="camera_name" default="/scouter_vision"/>
+  <arg name="out_width" default="256"/>
+  <arg name="out_height" default="192"/>
+  <arg name="static_tf" default="False"/>
+  <arg name="rviz" default="False"/>
 
   <!-- Camera calibration -->
   <include file="$(find desiccation_cnn)/launch/calibration.launch">
-    <arg name="camera_name" default="$(arg camera_name)"/>
+    <arg name="camera_name" value="$(arg camera_name)"/>
+    <arg name="out_width" value="$(arg out_width)"/>
+    <arg name="out_height" value="$(arg out_height)"/>
+    <arg name="static_tf" value="$(arg static_tf)"/>
   </include>
 
   <!-- Simulation or rosbag -->
-  <include unless="$(arg simulation)" file="$(find desiccation_cnn)/launch/source.launch">
-    <!-- rosbag include -->
-  </include>
-
+  <!-- Rosbag -->
+  <node unless="$(arg simulation)" pkg="rosbag" type="play" name="player" output="screen" args="--clock $(find quadmap)/rosbag/2021-08-25_15-23-09_serf_mode-3.bag tf_throttle:=tf"/>
+  
   <!-- Simulation -->
   <include if="$(arg simulation)" file="$(find desiccation_cnn)/launch/simulation.launch">
       <arg name="world" value="$(arg world)"/>
@@ -24,6 +30,9 @@
   <!-- Using default values -->
   <include if="$(arg simulation)" file="$(find uas_offboard_planner)/launch/hardware_control.launch"/>
 
-
+  <!-- The Point Cloud converter -->
+  <!-- <node pkg="learning_image_geometry" type="publish_pcl_node" name="pcl_plane"/> -->
   
+  <!-- RVIZ -->
+  <node if="$(arg rviz)" pkg="rviz" type="rviz" output="screen" name="rviz" respawn="true" args="-d $(find quadmap)/config/rviz_config_quteagles.rviz"/>
 </launch>
