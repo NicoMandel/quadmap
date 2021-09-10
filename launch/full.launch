@@ -9,7 +9,11 @@
   <arg name="out_width" default="256"/>
   <arg name="out_height" default="192"/>
   <arg name="static_tf" default="False"/>
-  <arg name="rviz" default="False"/>
+  <arg name="rviz" default="True"/>
+  <arg name="pcl_topic" default="pcl_plane"/>
+  <arg name="world_frame" default="map"/>
+  <arg name="camera_frame" default="oak_d_link"/>
+
 
   <!-- Camera calibration -->
   <include file="$(find desiccation_cnn)/launch/calibration.launch">
@@ -17,6 +21,7 @@
     <arg name="out_width" value="$(arg out_width)"/>
     <arg name="out_height" value="$(arg out_height)"/>
     <arg name="static_tf" value="$(arg static_tf)"/>
+    <arg name="camera_frame" value="$(arg camera_frame)"/>
   </include>
 
   <!-- Simulation or rosbag -->
@@ -31,8 +36,10 @@
   <include if="$(arg simulation)" file="$(find uas_offboard_planner)/launch/hardware_control.launch"/>
 
   <!-- The Point Cloud converter -->
-  <!-- <node pkg="learning_image_geometry" type="publish_pcl_node" name="pcl_plane"/> -->
+  <param name="pcl_topic" type="string" value="$(arg pcl_topic)"/>
+  <param name="world_frame" type="string" value="$(arg world_frame)"/>
+  <node pkg="learning_image_geometry" type="publish_pcl_node" name="pcl_plane"/>
   
   <!-- RVIZ -->
-  <node if="$(arg rviz)" pkg="rviz" type="rviz" output="screen" name="rviz" respawn="true" args="-d $(find quadmap)/config/rviz_config_quteagles.rviz"/>
+  <node if="$(arg rviz)" pkg="rviz" type="rviz" output="screen" name="rviz" respawn="true" args="-d $(find quadmap)/config/rviz_pcl.rviz"/>
 </launch>

@@ -1,0 +1,329 @@
+Panels:
+  - Class: rviz/Displays
+    Help Height: 87
+    Name: Displays
+    Property Tree Widget:
+      Expanded:
+        - /Global Options1
+        - /Markers1/Status1
+        - /Markers1/Namespaces1
+        - /TF1/Frames1
+      Splitter Ratio: 0.6694915294647217
+    Tree Height: 138
+  - Class: rviz/Selection
+    Name: Selection
+  - Class: rviz/Tool Properties
+    Expanded:
+      - /2D Pose Estimate1
+      - /2D Nav Goal1
+      - /Publish Point1
+    Name: Tool Properties
+    Splitter Ratio: 0.5886790156364441
+  - Class: rviz/Views
+    Expanded:
+      - /Current View1
+    Name: Views
+    Splitter Ratio: 0.6098484992980957
+  - Class: rviz_plugin_tutorials/Teleop
+    Name: Teleop
+    Topic: ""
+  - Class: rviz/Time
+    Experimental: false
+    Name: Time
+    SyncMode: 0
+    SyncSource: Raw frame
+Preferences:
+  PromptSaveOnExit: true
+Toolbars:
+  toolButtonStyle: 2
+Visualization Manager:
+  Class: ""
+  Displays:
+    - Class: rviz/Marker
+      Enabled: true
+      Marker Topic: /scouter_ros/vis_server/uav/markers
+      Name: Markers
+      Namespaces:
+        camera_FOV: true
+        robot_frame: true
+        robot_info: true
+      Queue Size: 5
+      Value: true
+    - Alpha: 1
+      Autocompute Intensity Bounds: true
+      Autocompute Value Bounds:
+        Max Value: 10
+        Min Value: -10
+        Value: true
+      Axis: Z
+      Channel Name: intensity
+      Class: rviz/PointCloud2
+      Color: 85; 170; 0
+      Color Transformer: FlatColor
+      Decay Time: 0
+      Enabled: true
+      Invert Rainbow: false
+      Max Color: 85; 255; 0
+      Min Color: 0; 0; 0
+      Name: hoverActions
+      Position Transformer: XYZ
+      Queue Size: 1
+      Selectable: true
+      Size (Pixels): 3
+      Size (m): 0.20000000298023224
+      Style: Spheres
+      Topic: /scouter_ros/vis_server/uav/actions/hover
+      Unreliable: false
+      Use Fixed Frame: true
+      Use rainbow: false
+      Value: true
+    - Alpha: 1
+      Arrow Length: 0.30000001192092896
+      Axes Length: 0.30000001192092896
+      Axes Radius: 0.009999999776482582
+      Class: rviz/PoseArray
+      Color: 0; 170; 255
+      Enabled: true
+      Head Length: 0.30000001192092896
+      Head Radius: 0.20000000298023224
+      Name: motionActions
+      Queue Size: 10
+      Shaft Length: 0.4000000059604645
+      Shaft Radius: 0.10000000149011612
+      Shape: Arrow (3D)
+      Topic: /scouter_ros/vis_server/uav/actions/motion
+      Unreliable: false
+      Value: true
+    - Alpha: 1
+      Buffer Length: 1
+      Class: rviz/Path
+      Color: 255; 170; 0
+      Enabled: true
+      Head Diameter: 0.30000001192092896
+      Head Length: 0.20000000298023224
+      Length: 0.30000001192092896
+      Line Style: Billboards
+      Line Width: 0.05999999865889549
+      Name: Path
+      Offset:
+        X: 0
+        Y: 0
+        Z: 0
+      Pose Color: 255; 85; 255
+      Pose Style: None
+      Queue Size: 10
+      Radius: 0.029999999329447746
+      Shaft Diameter: 0.10000000149011612
+      Shaft Length: 0.10000000149011612
+      Topic: /scouter_ros/vis_server/uav/path
+      Unreliable: false
+      Value: true
+    - Class: rviz/MarkerArray
+      Enabled: true
+      Marker Topic: /occupied_cells_vis_array
+      Name: MarkerArray
+      Namespaces:
+        {}
+      Queue Size: 100
+      Value: true
+    - Alpha: 1
+      Axes Length: 1
+      Axes Radius: 0.10000000149011612
+      Class: rviz/Pose
+      Color: 255; 25; 0
+      Enabled: true
+      Head Length: 0.20000000298023224
+      Head Radius: 0.15000000596046448
+      Name: robotPose
+      Queue Size: 10
+      Shaft Length: 0.25
+      Shaft Radius: 0.05000000074505806
+      Shape: Arrow
+      Topic: /mavros/local_position/pose
+      Unreliable: false
+      Value: true
+    - Alpha: 1
+      Autocompute Intensity Bounds: true
+      Autocompute Value Bounds:
+        Max Value: 10
+        Min Value: -10
+        Value: true
+      Axis: Z
+      Channel Name: intensity
+      Class: rviz/PointCloud2
+      Color: 255; 0; 0
+      Color Transformer: FlatColor
+      Decay Time: 0
+      Enabled: true
+      Invert Rainbow: false
+      Max Color: 255; 255; 255
+      Min Color: 0; 0; 0
+      Name: TargetParticles
+      Position Transformer: XYZ
+      Queue Size: 2
+      Selectable: true
+      Size (Pixels): 7
+      Size (m): 0.05000000074505806
+      Style: Points
+      Topic: /scouter_ros/vis_server/target/pos_belief
+      Unreliable: false
+      Use Fixed Frame: true
+      Use rainbow: true
+      Value: true
+    - Alpha: 1
+      Autocompute Intensity Bounds: true
+      Autocompute Value Bounds:
+        Max Value: 10
+        Min Value: -10
+        Value: true
+      Axis: Z
+      Channel Name: intensity
+      Class: rviz/PointCloud2
+      Color: 255; 170; 0
+      Color Transformer: FlatColor
+      Decay Time: 0
+      Enabled: true
+      Invert Rainbow: false
+      Max Color: 255; 85; 0
+      Min Color: 85; 0; 255
+      Name: RobotParticles
+      Position Transformer: XYZ
+      Queue Size: 2
+      Selectable: true
+      Size (Pixels): 7
+      Size (m): 0.05000000074505806
+      Style: Points
+      Topic: /scouter_ros/vis_server/uav/pos_belief
+      Unreliable: false
+      Use Fixed Frame: true
+      Use rainbow: false
+      Value: true
+    - Class: rviz/TF
+      Enabled: true
+      Frame Timeout: 15
+      Frames:
+        All Enabled: false
+        base_link:
+          Value: true
+        fcu:
+          Value: true
+        local_origin:
+          Value: true
+        map:
+          Value: true
+        map_offset:
+          Value: true
+        oak_d_link:
+          Value: true
+      Marker Alpha: 1
+      Marker Scale: 3
+      Name: TF
+      Show Arrows: true
+      Show Axes: true
+      Show Names: true
+      Tree:
+        map:
+          map_offset:
+            local_origin:
+              fcu:
+                base_link:
+                  oak_d_link:
+                    {}
+      Update Interval: 0
+      Value: true
+    - Class: rviz/Image
+      Enabled: true
+      Image Topic: /scouter_vision/image_raw
+      Max Value: 1
+      Median window: 5
+      Min Value: 0
+      Name: Raw frame
+      Normalize Range: true
+      Queue Size: 2
+      Transport Hint: compressed
+      Unreliable: false
+      Value: true
+    - Class: rviz/Image
+      Enabled: true
+      Image Topic: /scouter_vision/processed_image
+      Max Value: 1
+      Median window: 5
+      Min Value: 0
+      Name: Processed frame
+      Normalize Range: true
+      Queue Size: 2
+      Transport Hint: compressed
+      Unreliable: false
+      Value: true
+  Enabled: true
+  Global Options:
+    Background Color: 255; 255; 255
+    Default Light: true
+    Fixed Frame: map
+    Frame Rate: 30
+  Name: root
+  Tools:
+    - Class: rviz/Interact
+      Hide Inactive Objects: true
+    - Class: rviz/MoveCamera
+    - Class: rviz/Select
+    - Class: rviz/FocusCamera
+    - Class: rviz/Measure
+    - Class: rviz/SetInitialPose
+      Theta std deviation: 0.2617993950843811
+      Topic: /initialpose
+      X std deviation: 0.5
+      Y std deviation: 0.5
+    - Class: rviz/SetGoal
+      Topic: /move_base_simple/goal
+    - Class: rviz/PublishPoint
+      Single click: true
+      Topic: /clicked_point
+  Value: true
+  Views:
+    Current:
+      Class: rviz/XYOrbit
+      Distance: 19.265180587768555
+      Enable Stereo Rendering:
+        Stereo Eye Separation: 0.05999999865889549
+        Stereo Focal Distance: 1
+        Swap Stereo Eyes: false
+        Value: false
+      Field of View: 0.7853981852531433
+      Focal Point:
+        X: 0.14503276348114014
+        Y: -2.7344970703125
+        Z: 2.384185791015625e-07
+      Focal Shape Fixed Size: true
+      Focal Shape Size: 0.05000000074505806
+      Invert Z Axis: false
+      Name: Current View
+      Near Clip Distance: 0.009999999776482582
+      Pitch: 1.4997963905334473
+      Target Frame: fcu
+      Yaw: 5.048181533813477
+    Saved: ~
+Window Geometry:
+  Displays:
+    collapsed: false
+  Height: 739
+  Hide Left Dock: false
+  Hide Right Dock: false
+  Processed frame:
+    collapsed: false
+  QMainWindow State: 000000ff00000000fd000000040000000000000145000002bffc0200000017fc000000000000012b0000000000fffffffa000000000100000002fb0000001c00500072006f006300650073007300650064004600720061006d00650000000000ffffffff0000000000000000fb000000100044006900730070006c0061007900730000000000000001c60000016a01000003fb000000120052006100770020006600720061006d00650100000000000001660000002201000003fb0000001c00500072006f006300650073007300650064004600720061006d006501000001630000015c0000000000000000fb0000001200530065006c0065006300740069006f006e00000001e10000009b0000007901000003fb0000001e0054006f006f006c002000500072006f007000650072007400690065007302000001ed000001df00000185000000a3fb000000120056006900650077007300200054006f006f02000001df000002110000018500000122fb000000200054006f006f006c002000500072006f0070006500720074006900650073003203000002880000011d000002210000017afb0000002000730065006c0065006300740069006f006e00200062007500660066006500720200000138000000aa0000023a00000294fb00000014005700690064006500530074006500720065006f02000000e6000000d2000003ee0000030bfb0000000c004b0069006e0065006300740200000186000001060000030c00000261fb0000000e0072003200300030002d00490052020000000b000000260000015f00000105fb000000140072003200300030002d00440045005000540048020000000a0000012a000001600000011efb000000140069007200690073005f006400650070007400680200000169000000e20000015600000115fb00000012005200470042002d006e0061006400690072020000016b0000031b000001560000011afb0000000c006f00760037003200350031020000000b0000024b000001560000011bfb0000000c006f00760037003200350031030000000a0000029400000162000000f0fb0000002a00500072006f006300650073007300650064004600720061006d0065005f006f00760037003200350031020000000a000002970000020900000196fb0000000c00430061006d0065007200610000000339000000cd0000000000000000fb0000000a0049006d0061006700650100000156000000a60000000000000000fb0000001e00500072006f006300650073007300650064002d006600720061006d0065020000001000000289000001db0000017dfb0000000a0049006d006100670065010000018d000000ab0000000000000000fb0000000c00540065006c0065006f00700000000043000001e90000005101000003fb0000001e00500072006f0063006500730073006500640020006600720061006d006501000001670000015800000022010000030000000100000110000003f1fc0200000004fb0000001e0054006f006f006c002000500072006f00700065007200740069006500730100000041000000780000000000000000fb0000000a005600690065007700730000000000000003f1000000cd01000003fb000000100072003200300030002d005200470042020000000a0000024900000160000000fefb0000001200530065006c0065006300740069006f006e010000025a000000b200000000000000000000000200000490000000a9fc0100000001fb0000000a00560069006500770073030000004e00000080000002e10000019700000003000003be0000004dfc0100000003fb0000000800540069006d00650000000000000003be0000040201000003fb0000000800540069006d00650100000000000004500000000000000000fb0000001c00700072006f006300650073007300650064004600720061006d006501000002f7000000a1000000000000000000000165000002bf00000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730000000000ffffffff0000000000000000
+  Raw frame:
+    collapsed: false
+  Selection:
+    collapsed: false
+  Teleop:
+    collapsed: false
+  Time:
+    collapsed: false
+  Tool Properties:
+    collapsed: false
+  Views:
+    collapsed: false
+  Width: 683
+  X: 0
+  Y: 0
