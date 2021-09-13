@@ -3,20 +3,29 @@
 <!--  -->
 <launch>
   <!-- <arg name="debug" default="true"/> -->
+  <!-- Simulation arguments -->
   <arg name="simulation" default="false"/>
   <arg name="control" default="false"/>
   <arg name="world" default="serf"/>
-  <arg name="camera_name" default="/scouter_vision"/>
-  <arg name="out_width" default="1920"/> <!-- 256 --> 
-  <arg name="out_height" default="1080"/> <!-- 192 -->
+  <!-- Values for the camera calibration file -->
+  <arg name="out_width" default="256"/> <!-- 1920 / 256 --> 
+  <arg name="out_height" default="192"/> <!-- 1080 / 192 -->
   <arg name="static_tf" default="False"/>
+  <!-- Visualisation -->
   <arg name="rviz" default="True"/>
+  <!-- Frames -->
   <arg name="pcl_topic" default="pcl_plane"/>
   <arg name="world_frame" default="map"/>
-  <arg name="camera_frame" default="oak_d_link"/>
-  <arg name="info_topic" default="$(arg camera_name)/camera_info"/>
-  <arg name="image_topic" default="$(arg camera_name)/image_raw"/>
 
+  <!-- Setting the names depending on Simulation / Rosbag  -->
+  <arg if="$(arg simulation)" name="camera_name" default="/hbv_1615"/>
+  <arg if="$(arg simulation)" name="image_topic" default="$(arg camera_name)/image_color"/>
+  <arg if="$(arg simulation)" name="camera_frame" default="hbv_1615_link"/>
+  <arg unless="$(arg simulation)" name="camera_name" default="/scouter_vision"/>
+  <arg unless="$(arg simulation)" name="image_topic" default="$(arg camera_name)/image_raw"/>
+  <arg unless="$(arg simulation)" name="camera_frame" default="oak_d_link"/>
+  <arg name="info_topic" default="$(arg camera_name)/camera_info"/>
+   
   <!-- Simulation or rosbag -->
   <!-- Rosbag -->
   <node unless="$(arg simulation)" pkg="rosbag" type="play" name="player" output="screen" args="--clock $(find quadmap)/rosbag/2021-08-25_15-23-09_serf_mode-3.bag tf_throttle:=tf"/>
@@ -37,8 +46,9 @@
     <arg name="camera_frame" value="$(arg camera_frame)"/>
     <arg name="pcl_topic" value="$(arg pcl_topic)"/>
     <arg name="world_frame" value="$(arg world_frame)"/>
-    <arg name="camera_info_topic" value="$(arg camera_info_topic)"/>
+    <arg name="info_topic" value="$(arg info_topic)"/>
     <arg name="image_topic" value="$(arg image_topic)"/>
+    <arg name="simulation" value="$(arg simulation)"/>
   </include>
   
   <!-- RVIZ -->
