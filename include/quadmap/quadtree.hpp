@@ -1,8 +1,9 @@
 #ifndef QUADTREE_H
 #define QUADTREE_H
 
-#include <stdint.h>
 #include <math/math.hpp>
+#include <unordered_map>
+
 /**
  * @brief 
  * header file for the quadtree implementation used in this package. Based on the numerical recipes in C++ implementation
@@ -15,12 +16,16 @@ private:
     static const int BIT = 4;
     static const int OFFSET = 2;
     static const int MAXDEPTH = 32 / 2;
-    // static in MAX_DEPTH = pow((double)2, (double)32);
     
     // constant values per tree
     const int maxd;
     double lo[2];
     double scale[2];
+
+    // the unordered map storage container
+    std::unordered_map<uint32_t, Quadtree> map;
+
+    // functions
     void setbox();
     
 

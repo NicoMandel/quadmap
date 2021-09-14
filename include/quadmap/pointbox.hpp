@@ -37,13 +37,15 @@ public:
     }
     
     bool operator== (const Point &p) const {
-        if (this->x[0] != p.get(0) || this->x[1] != p.get(1)) return false;
-        else return true;
+        if (this->x[0] == p.get(0) && this->x[1] == p.get(1)) return true;
+        else return false;
     }
 
     // to test whether a point is in a box
     bool isinbox(const Box &box){
-        return 1; // TODO: Dummy
+        if (this->x[0] >= box.low().get(0) && this->x[0] <= box.high().get(0) &&
+            this->x[1] >= box.low().get(1) && this->x[1] <= box.high().get(1)) return true;
+        else return false;
     }
 };
 
@@ -54,6 +56,8 @@ private:
 public:
     Box(const Point &lo, const Point &hi): lo(lo), hi(hi) {}
     ~Box(){}
+    Point low() const { return this->lo;}
+    Point high() const { return this->hi;}
 };
 
 

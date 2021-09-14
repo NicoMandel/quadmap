@@ -21,7 +21,7 @@ public:
     ~QuadMap_node();
     
     // callback function
-    void pcl_callback(const sensor_msgs::PointCloud);
+    void pcl_callback(sensor_msgs::PointCloudConstPtr);
     bool getQuadmap();
 };
 
@@ -43,7 +43,7 @@ QuadMap_node::~QuadMap_node()
 
 
 // Callback
-void QuadMap_node::pcl_callback(const sensor_msgs::PointCloud pcl){
+void QuadMap_node::pcl_callback(sensor_msgs::PointCloudConstPtr pcl){
     // pass it to the quadtree
 }
 
