@@ -3,6 +3,7 @@
 
 #include <math/math.hpp>
 #include <unordered_map>
+#include "pointbox.hpp"
 
 /**
  * @brief 
@@ -23,17 +24,26 @@ private:
     double scale[2];
 
     // the unordered map storage container
-    std::unordered_map<uint32_t, Quadtree> map;
+    std::unordered_map<uint32_t, std::string> map;
 
-    // functions
-    void setbox();
-    
+    // Additional stuff
+    int current_d;
+
 
 public:
     Quadtree(/* args */);
     ~Quadtree();
 
+    // Functions
+    void setbox(Point low, Point high);
+    Box getBox(uint32_t idx);
+    uint32_t getIndex(Point pt);
 
+    // Indexing functions
+    uint32_t getDaughterNumber(uint32_t idx);
+    uint32_t getMotherIdx(uint32_t idx);
+    uint32_t getLeftDaughterIdx(uint32_t idx);
+    uint32_t getRightDaughterIdx(uint32_t idx);
 
 };
 

@@ -14,15 +14,6 @@ public:
         this->x[0] = p.get(0);
         this->x[1] = p.get(1);
     }
-    
-    ~Point(){
-        // Correct??
-        delete x;
-    }
-
-    double get(const int i) const{
-        return x[i];
-    }
 
     Point(double x = 0.0, double y = 0.0){
         this->x[0] = x;
@@ -34,6 +25,36 @@ public:
         this->x[0] = p.get(0);
         this->x[1] = p.get(1);
         return *this;
+    }
+    
+    ~Point(){
+        // Correct??
+        delete x;
+    }
+
+    double get(const int i) const{
+        return x[i];
+    }
+
+    double getx(const int i) const{
+        return x[0];
+    }
+
+    double gety(const int i) const{
+        return x[1];
+    }
+
+    void set(double x, double y){
+        this->x[0] = x;
+        this->x[1] = y;
+    }
+
+    void sety(double y){
+        this->x[1] = y;
+    }
+
+    void setx(double x){
+        this->x[0] = x;
     }
     
     bool operator== (const Point &p) const {
