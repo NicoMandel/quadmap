@@ -54,5 +54,5 @@
   </include>
   
   <!-- RVIZ -->
-  <node if="$(arg rviz)" pkg="rviz" type="rviz" output="screen" name="rviz" respawn="true" args="-d $(find quadmap)/config/rviz_pcl.rviz"/>
+  <node if="$(arg rviz)" pkg="rviz" type="rviz" output="screen" name="rviz" respawn="true" args="-d $(find quadmap)/config/rviz_pcl_img.rviz"/>
 </launch>
