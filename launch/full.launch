@@ -7,6 +7,7 @@
   <arg name="simulation" default="false"/>
   <arg name="control" default="false"/>
   <arg name="world" default="serf"/>
+  <arg name="mode" default="hybrid-freq"/>
   <!-- Values for the camera calibration file -->
   <arg name="out_width" default="256"/> <!-- 1920 / 256 --> 
   <arg name="out_height" default="192"/> <!-- 1080 / 192 -->
@@ -16,6 +17,7 @@
   <!-- Frames -->
   <arg name="pcl_topic" default="pcl_plane"/>
   <arg name="world_frame" default="map"/>
+  
 
   <!-- Setting the names depending on Simulation / Rosbag  -->
   <arg if="$(arg simulation)" name="camera_name" default="/hbv_1615"/>
@@ -28,7 +30,7 @@
    
   <!-- Simulation or rosbag -->
   <!-- Rosbag -->
-  <node unless="$(arg simulation)" pkg="rosbag" type="play" name="player" output="screen" args="--clock $(find quadmap)/rosbag/2021-08-25_15-23-09_serf_mode-3.bag tf_throttle:=tf"/>
+  <node unless="$(arg simulation)" pkg="rosbag" type="play" name="player" output="screen" args="--clock $(find quadmap)/rosbag/$(arg mode).bag tf_throttle:=tf"/>
   
   <!-- Simulation -->
   <include if="$(arg simulation)" file="$(find desiccation_cnn)/launch/simulation.launch">
