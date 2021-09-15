@@ -59,9 +59,57 @@ Box Quadtree::getBox(uint32_t idx){
 
 // Get the lowest index where point pt should be inserted
 uint32_t Quadtree::getIndex(Point pt){
-    // ! CONTINUE HERE
-    // TODO ====> continue with the function that calculates the lowest level index
-    // ! CONTINUE HERE
+
+    uint32_t node=1, left, right, children;
+    uint8_t level;
+    for (level = 2; level <= this->maxd; level++){
+        left = this->getLeftDaughterIdx(node);
+        right = this->getRightDaughterIdx(node);
+        for (children=left; children <= right; children++){
+            if (pt.isinbox(getBox(children))){
+                node = children; break;
+            }
+        }
+        // Not sure what this safety is for? Integer overflow? Or if it hasn't been found not to be cyclic?
+        if (children > right) break;
+    }
+    return node;
+}
+
+// Get the indices of multiple points
+std::unordered_map<uint32_t, Point> Quadtree::getIndices(std::vector<Point> pts){
+    std::unordered_map<uint32_t, Point> outputs;
+    
+    // May have to move this allocation over for OpenMP to work
+    uint32_t idx;
+    for (int i = 0; i<pts.size(); i++){
+        idx = getIndex(pts.at(i));
+        outputs[idx] = pts.at(i);
+    }
+    return outputs;
+}
+
+// The index reducing function.
+std::unordered_map<uint32_t, Point> Quadtree::reduceIdcs(std::unordered_map<uint32_t, Point> &idcs){
+    // from: https://www.techiedelight.com/convert-map-vector-key-value-pairs-cpp/
+    std::vector<uint32_t> frontier;
+    frontier.resize(idcs.size());
+    std::copy(idcs.begin(), idcs.end(), frontier.begin());       
+
+    // Now look through the search frontier
+    uint32_t curr_idx, left, right;
+    std::vector<uint32_t> mothers(frontier.size());
+    while(!frontier.empty()){
+        // get all the mothers
+        for (int i=0; i<frontier.size(); i++)
+        {
+            mothers.at(i) = getMotherIdx(frontier.at(i));
+        }
+        // TODO: Continue here -> get a brute force approach first!
+        // std::unique unq(mothers.begin(), mothers.end());
+
+    }
+
 }
 
 // Indexing functions
@@ -69,7 +117,6 @@ uint32_t Quadtree::getIndex(Point pt){
 uint32_t Quadtree::getDaughterNumber(uint32_t idx){
     return (idx + this->OFFSET) % this->BIT;
 }
-
 
 // Get the index of the mother
 uint32_t Quadtree::getMotherIdx(uint32_t idx){
