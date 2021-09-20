@@ -9,8 +9,8 @@
   <arg name="world" default="serf"/>
   <arg name="mode" default="hybrid-freq"/>
   <!-- Values for the camera calibration file -->
-  <arg name="out_width" default="256"/> <!-- 1920 / 256 --> 
-  <arg name="out_height" default="192"/> <!-- 1080 / 192 -->
+  <arg name="out_width" default="256"/> <!-- 1920 / 256 / 128 --> 
+  <arg name="out_height" default="192"/> <!-- 1080 / 192 / 96 -->
   <arg name="static_tf" default="False"/>
   <!-- Visualisation -->
   <arg name="rviz" default="True"/>
@@ -54,5 +54,5 @@
   </include>
   
   <!-- RVIZ -->
-  <node if="$(arg rviz)" pkg="rviz" type="rviz" output="screen" name="rviz" respawn="true" args="-d $(find quadmap)/config/rviz_pcl_img.rviz"/>
+  <node if="$(arg rviz)" pkg="rviz" type="rviz" output="screen" name="rviz" respawn="true" args="-d $(find quadmap)/config/rviz_pcl_color.rviz"/>
 </launch>

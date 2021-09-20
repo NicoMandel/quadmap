@@ -76,6 +76,49 @@ uint32_t Quadtree::getIndex(Point pt){
     return node;
 }
 
+// Getting the insertion indices in a smarter way
+std::unordered_map<uint32_t, Point> Quadtree::getInsertion(std::vector<Point> points){
+    uint8_t level;
+
+    uint32_t left, right;
+
+    std::unordered_map<uint32_t, Point> insertions;
+    // using containers to keep what we need - the 
+    std::vector<uint32_t> idcs_vec(points.size(), 1);
+    std::unordered_map<uint32_t, uint32_t> idcs_map;
+    
+    // step through the levels
+    for (level = 2; level<= this->maxd; level++)
+    {
+        // point has the function that tests whether it is in a box
+        for (int i = 0; i < points.size(); i ++)
+        {
+            Point pt = points.at(i);
+            uint32_t pt_idx = idcs_vec.at(i);
+            left = getLeftDaughterIdx(pt_idx);
+            right = getRightDaughterIdx(pt_idx);
+            for (int j = left; j <= right; j++){
+                if (pt.isinbox(getBox(j))){
+                    idcs_vec.at(i) = j;
+                    idcs_map[i] = j;
+                    break;
+                }
+            // Safety?
+            if (j > right) break;
+            }
+        }
+
+        // Now do the check. Every point now has a an index for the level that we are at
+        for (int i = 0; i< points.size(); i++){
+            std::vector<uint32_t> neighbors = getNeighborsIdcs(idcs_vec.at(i));
+            // TODO this is O(n^2 log n)... fucking useless!
+        }
+
+    }
+
+    return insertions;
+}
+
 // Get the indices of multiple points
 std::unordered_map<uint32_t, Point> Quadtree::getIndices(std::vector<Point> pts){
     std::unordered_map<uint32_t, Point> outputs;
@@ -89,26 +132,82 @@ std::unordered_map<uint32_t, Point> Quadtree::getIndices(std::vector<Point> pts)
     return outputs;
 }
 
-// The index reducing function.
+std::vector<uint32_t> Quadtree::getIndicesVec(std::vector<Point> pts){
+    std::vector<uint32_t> idcs(pts.size());
+    for (int i = 0; i<pts.size(); i++){
+        idcs.at(i) = getIndex(pts.at(i));
+    }
+    return idcs;
+}
+
+// The index reducing function. Is currently O(n^2)
 std::unordered_map<uint32_t, Point> Quadtree::reduceIdcs(std::unordered_map<uint32_t, Point> &idcs){
     // from: https://www.techiedelight.com/convert-map-vector-key-value-pairs-cpp/
-    std::vector<uint32_t> frontier;
-    frontier.resize(idcs.size());
+    std::vector<uint32_t> frontier(idcs.size());
+    std::unordered_map<uint32_t, Point> reduced_idcs = idcs;
     std::copy(idcs.begin(), idcs.end(), frontier.begin());       
 
     // Now look through the search frontier
-    uint32_t curr_idx, left, right;
-    std::vector<uint32_t> mothers(frontier.size());
+    uint32_t curr_idx, mother;
+    // std::vector<uint32_t> mothers(frontier.size());
     while(!frontier.empty()){
         // get all the mothers
         for (int i=0; i<frontier.size(); i++)
         {
-            mothers.at(i) = getMotherIdx(frontier.at(i));
-        }
-        // TODO: Continue here -> get a brute force approach first!
-        // std::unique unq(mothers.begin(), mothers.end());
+            // Brute force approach - there is definitely a smarter way to do this
+            curr_idx = frontier.at(0);          // get the first element
+            frontier.erase(frontier.begin());   // remove it from the list
 
+            mother = getMotherIdx(curr_idx);
+
+            // for every other element in the frontier 
+            for (int i=0; i<frontier.size(); i++)           // may have to move this to i=1
+            {
+                if (isSibling(curr_idx, frontier.at(i)))
+                {
+                    reduced_idcs[curr_idx] = idcs[curr_idx];
+                    reduced_idcs[frontier.at(i)] = idcs[frontier.at(i)];
+                    // remove the sibling from the frontier
+                    frontier.erase(frontier.begin() + i);
+                    // initialising the point to negative
+                    // ! this knowledge should be used later - can be implemented as a check
+                    // if the mother does not yet exist
+                    // if ()
+                    reduced_idcs[mother] = Point(-1., -1.);
+                }
+            }
+            // push the mother in the back. If they are siblings, they have the same mother, so this only needs to be added once
+            // If they are not siblings the mother has to be pushed back anyways.
+            frontier.push_back(mother);
+            frontier.shrink_to_fit();
+        }
     }
+}
+
+// Function to reduce the idcs on the idcs of the points alone
+std::vector<uint32_t> reduceIdcs(std::vector<uint32_t> pt_idcs, int width, int height){
+    std::vector<uint32_t> reduced_idcs(pt_idcs.size());
+    std::copy(pt_idcs.begin(), pt_idcs.end(), reduced_idcs.begin());
+
+    std::vector<uint32_t> frontier(pt_idcs.size());
+    std::copy(pt_idcs.begin(), pt_idcs.end(), frontier.begin());
+
+    uint32_t curr_idx;
+    std::vector<uint32_t> neighbors;
+
+    // for frontier.empty() to work, we need a shrink_to_fit() in the end
+    while(!frontier.empty()){
+        curr_idx = frontier.at(0);          // get the first element
+        frontier.erase(frontier.begin());   // remove it from the list
+        
+        // ! This does not work
+        neighbors = getNeighborsIdcs(pt_idcs.at(curr_idx), width, height);
+
+
+        frontier.shrink_to_fit();
+    }       
+
+
 
 }
 
@@ -131,5 +230,27 @@ uint32_t Quadtree::getLeftDaughterIdx(uint32_t idx){
 // Getting the index of the rightmost daughter
 uint32_t Quadtree::getRightDaughterIdx(uint32_t idx){
     return (getLeftDaughterIdx(idx) + BIT - 1); 
+}
+
+// Boolean functions - with ternary operator
+bool Quadtree::isSibling(uint32_t idx, uint32_t tst_idx){
+    return (getMotherIdx(idx) == getMotherIdx(tst_idx)) ? true :  false;
+}
+
+// function to find the vector of the Moore neighborhood - already does row and column checks, so length is not consistent
+std::vector<uint32_t> getNeighborsIdcs(uint32_t idx, int width, int height){
+    std::vector<uint32_t> neighbors;
+    int col = idx % width;
+    int row = std::floor(idx / width);
+    // from -1 to +1
+    for (int i = -1; i <= 1; i++)       // for every row
+    {
+        for (int j = -1; j <= 1; j++)       // for every column
+        {
+            if(i >= 0 && i < width && j >= 0 && j < height) neighbors.push_back(i * width + j);
+        }
+    }
+
+    return neighbors;
 }
 

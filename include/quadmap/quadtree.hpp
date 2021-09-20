@@ -5,6 +5,7 @@
 #include <unordered_map>
 #include "pointbox.hpp"
 #include "quadtreeElement.hpp"
+#include <unordered_set>
 
 /**
  * @brief 
@@ -31,6 +32,11 @@ private:
     // Additional stuff
     int current_d;
 
+    // Private member functions
+    bool setMothers(uint32_t idx);
+
+    std::vector<uint32_t> getNeighborsIdcs(uint32_t idx);
+   
 
 public:
     Quadtree(/* args */);
@@ -50,7 +56,14 @@ public:
     // Functions using containers for multiple elements
     // TODO: turn this into a hash map
     std::unordered_map<uint32_t, Point> getIndices(std::vector<Point> pts);
+    std::vector<uint32_t> Quadtree::getIndicesVec(std::vector<Point> pts);         // the non-hash map version, where the indices are corresponding 
     std::unordered_map<uint32_t, Point> reduceIdcs(std::unordered_map<uint32_t, Point>&);
+    std::vector<uint32_t> reduceIdcs(std::vector<uint32_t> pt_idcs, int width, int height);
+
+    std::unordered_map<uint32_t, Point> Quadtree::getInsertion(std::vector<Point> points);
+
+    // test function
+    bool isSibling(uint32_t idx, uint32_t tst_idx);
 
 
 };
