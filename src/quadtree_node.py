@@ -1,9 +1,12 @@
 #!/usr/bin/env python
 
+import struct
 import rospy
 from sensor_msgs.msg import PointCloud
 import quadtree as qt
 import numpy as np
+from quadmap.srv import getMap, getMapResponse
+import json
 
 class QuadMap_Node:
 
@@ -17,13 +20,18 @@ class QuadMap_Node:
         
         # advertising a service
         # TODO: make this a service that writes to a "tmp" directory and passes the filename
+        self.serv = rospy.Service('getMap', getMap, self.getMap)
+
+        # file directory to write to 
+        self.directory = "~/.ros/"
+        self.fname = "quadtree.json"
 
         # subscriber to the pcl_plane
         rospy.Subscriber(topic, PointCloud, self.pcl_callback, queue_size=1)
 
 
     def pcl_callback(self, msg):
-        rgb_channel = msg.channels.values
+        rgb_channel = msg.channels[0].values
         pts = msg.points
         val_dict = self.decode_cmap(pts, rgb_channel)
         idcs = self.tree.find_idcs(val_dict)
@@ -45,11 +53,22 @@ class QuadMap_Node:
 
 
     def decode_value(self, ch):
-        r = (ch & (255 << 16))
-        g = (ch & (255 << 8))
-        b = (ch & (255))
+        nch = struct.unpack("f", ch)
+        r = (nch[0] & (255 << 16))
+        g = (nch[0] & (255 << 8))
+        b = (nch[0] & (255))
 
         return r, g, b
+
+    def getMap(self, req):
+        """
+            Function to respond to the Map request
+        """
+        fstring = self.directory + self.fname
+        with open(fstring, 'w') as fp:
+            json.dump(self.tree.dictionary, fp)
+        rospy.loginfo("Wrote Quadtree dictionary to: {}".format(fstring))
+        return getMapResponse(fstring)
 
 
 
