@@ -21,7 +21,7 @@ private:
     static const int MAXDEPTH = 32 / 2;
     
     // constant values per tree
-    const int maxd;
+    int maxd;
     double lo[2];
     double scale[2];
 
@@ -41,6 +41,7 @@ private:
 
 public:
     Quadtree(/* args */);
+    Quadtree(int);
     ~Quadtree();
 
     // Functions for singular use

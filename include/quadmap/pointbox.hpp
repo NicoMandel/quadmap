@@ -36,11 +36,11 @@ public:
         return x[i];
     }
 
-    double getx(const int i) const{
+    double getx() const{
         return x[0];
     }
 
-    double gety(const int i) const{
+    double gety() const{
         return x[1];
     }
 
