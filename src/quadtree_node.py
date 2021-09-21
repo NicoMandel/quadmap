@@ -25,7 +25,7 @@ class QuadMap_Node:
         scale = rospy.get_param("qt_scale", default=50)
         
         # initialise the tree
-        self.tree = qt.Quadtree(low=(0, 0), scale=scale, max_depth=max_depth)
+        self.tree = qt.Quadtree(low=(-50, -50), scale=scale, max_depth=max_depth)
         
         # advertising a service
         # TODO: make this a service that writes to a "tmp" directory and passes the filename

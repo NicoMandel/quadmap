@@ -37,20 +37,36 @@ class Box:
 
 class QuadtreeElement:
 
+    # for 2 class case - prior is 0.5 and 
+    prior = np.asarray([0.5, 0.5])
+    sensor_model = np.asarray([[0.8, 0.2], [0.2, 0.8]])
+    # logmodel = 
+    # use a log-odds updating - see Thrun, p. 75
+
     def __init__(self, index, val=None) -> None:
         self.index = index
         self.val = val
 
     def update(self, value) -> None:
-        # TODO: this will have to update considering the value is "None" or something
-        # it will be none if CHILDREN have been previously inserted
-        # self.val -=.1
+        self.val = self.val + np.log()
         nval = np.asarray(self.val) * np.asarray(value)
         self.val = tuple(nval)
-        # print("Got to update {}. Currently holds {}, type: {}, incoming values are: {}, type: {}".format(self.index, self.val, type(self.val), value, type(value)))
     
     def insert(self, val) -> None:
         self.val = val
+
+    def getVal(self):
+        """
+            Function to turn the log-odds back into probabilities (belief)
+        """
+        return (1. - (1. / (1. + np.exp(self.val))))
+
+
+    def getMaxVal(self):
+        """
+            Function to get the argmax - basically whether it is an interesting class or not. 
+        """
+
 
     def __repr__(self) -> str:
         return "{}, v: {}".format(self.index, self.val)
@@ -133,8 +149,9 @@ class Quadtree:
         
     def insert_point(self, idx, val: tuple):
         """
-            Code to insert a value into the dictionary by index
+            Code to insert a value into the dictionary by index.
         """
+
         # Insert the child with the actual value
         self.insert_idx(idx, val)
         midx = self.getmother_idx(idx)
