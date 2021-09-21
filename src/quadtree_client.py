@@ -15,7 +15,7 @@ class QTclient:
 
     def __init__(self) -> None:
         rospy.wait_for_service("getMap")
-        self.bridge = cv_bridge.CvBridge()
+        self.bridge = CvBridge()
         try:
             self.getm = rospy.ServiceProxy("getMap", getMap)
         except rospy.ServiceException as se:

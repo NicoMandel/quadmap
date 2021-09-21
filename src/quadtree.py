@@ -7,6 +7,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
+import json
 
 class Point:
 
@@ -63,6 +64,24 @@ class QuadtreeElement:
         """
         out = np.log(1 + 3 * self.index) / np.log(4)
         return np.ceil(out) 
+
+    # make JSON serializable
+    def __json__(self):
+        return {
+            self.index: self.val
+        }
+
+    for_json = __json__
+
+    def toJSON(self):
+        return json.dumps(self, default=lambda o: o.__dict__, sort_keys=True, indent=4)
+
+    @classmethod
+    def from_json(cls, json):
+        obj = cls
+        obj.index = json.index
+        obj.val = json[obj.index]
+        return obj
 
 
 class Quadtree:
@@ -228,11 +247,11 @@ class Quadtree:
                     frontier.remove(f_idx)
             # ALWAYS add the mother to the search frontier - so that other inserted nodes will know if there is something at a deeper depth
             midx = self.getmother_idx(idx)
+            if midx <= 1:
+                break
             idcs_dict[midx] = None if f_sidcs else idcs_dict[idx] 
             del idcs_dict[idx]
             frontier.append(midx)
-            if midx == 1:
-                break
         return reduced_idcs
 
     def reduce_idcs_alternative(self, idcs_dict: dict) -> dict:

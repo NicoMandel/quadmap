@@ -1,3 +1,5 @@
 **/rosbag/
 
 **/.vscode/
+
+**/__pycache__/

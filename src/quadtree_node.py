@@ -5,8 +5,17 @@ import rospy
 from sensor_msgs.msg import PointCloud
 import quadtree as qt
 import numpy as np
+
+# for storing / sending the quadmap
 from quadmap.srv import getMap, getMapResponse
 import json
+import os.path
+
+# For plotting the quadmap
+from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
+from matplotlib.figure import Figure
+from cv_bridge import CvBridge, CvBridgeError
+from sensor_msgs.msg import Image
 
 class QuadMap_Node:
 
@@ -23,27 +32,68 @@ class QuadMap_Node:
         self.serv = rospy.Service('getMap', getMap, self.getMap)
 
         # file directory to write to 
-        self.directory = "~/.ros/"
-        self.fname = "quadtree.json"
+        directory = "~/.ros"
+        fname = "quadtree.json"
+        self.fpath = os.path.abspath(os.path.expanduser(os.path.join(directory, fname)))
+        # creating the file without doing anything
+        open(self.fpath, 'a').close()     
 
         # subscriber to the pcl_plane
         rospy.Subscriber(topic, PointCloud, self.pcl_callback, queue_size=1)
 
+        # Add a publisher for an image topic.
+        self.bridge = CvBridge()
+        self.fig = Figure()
+        self.canvas = FigureCanvas(self.fig)
+        self.ax =self.fig.gca()
+
+        self.img_pub = rospy.Publisher("qt_img", Image, queue_size=1)
+
+
 
     def pcl_callback(self, msg):
-        rgb_channel = msg.channels[0].values
+        # rgb_channel = msg.channels[0].values
+        intensity_channel = msg.channels[1].values
         pts = msg.points
-        val_dict = self.decode_cmap(pts, rgb_channel)
+        # val_dict = self.decode_cmap(pts, rgb_channel)
+        val_dict = self.decode_intensity(pts, intensity_channel)
         idcs = self.tree.find_idcs(val_dict)
 
         reduced_idcs_dict = self.tree.reduce_idcs(idcs)
         self.tree.insert_points(reduced_idcs_dict)
 
+        # sending out on an image topic
+        self.send_img()
+
+
+    def send_img(self):
+        self.tree.plot_tree(self.ax)
+        # self.ax.axis('off')
+        # self.fig.tight_layout(pad=0)
+        # self.ax.margins(0)
+        self.canvas.draw()
+        img = np.frombuffer(self.canvas.tostring_rgb(), dtype='uint8')
+        img = img.reshape(self.fig.canvas.get_width_height()[::-1]+ (3,))
+        try:
+            imgmsg = self.bridge.cv2_to_imgmsg(img, encoding="rgb8")
+        except CvBridgeError as cve:
+            rospy.logerr("Encountered Error converting image message: {}".format(
+                cve
+            ))
+        self.img_pub.publish(imgmsg)
+
     
-    
-    def decode_cmap(self, pts, channel):
+    def decode_intensity(self, pts, intensity):
         pt_dict = {}
-        for i, ch in enumerate(channel):
+        for i, ch in enumerate(intensity):
+            pt = pts[i]
+            pt_dict[tuple([pt.x, pt.y])] = ch
+        
+        return pt_dict
+    
+    def decode_cmap(self, pts, col_channel):
+        pt_dict = {}
+        for i, ch in enumerate(col_channel):
             r, g, b = self.decode_value(ch)
 
             pt = pts[i]
@@ -53,10 +103,15 @@ class QuadMap_Node:
 
 
     def decode_value(self, ch):
-        nch = struct.unpack("f", ch)
-        r = (nch[0] & (255 << 16))
-        g = (nch[0] & (255 << 8))
-        b = (nch[0] & (255))
+        """
+            Looky here: https://answers.ros.org/question/340159/rgb-color-data-in-channelfloat32-of-pointcloud-message-not-working/
+            https://answers.ros.org/question/35655/getting-pointcloud2-data-in-python/
+            struct.unpack('f', struct.pack('i', 0xff0000))[0]
+        """
+        float_rgb = struct.unpack('f', struct.pack('i', ch))[0]
+        r = (float_rgb[0] & (255 << 16))
+        g = (float_rgb[0] & (255 << 8))
+        b = (float_rgb[0] & (255))
 
         return r, g, b
 
@@ -64,11 +119,11 @@ class QuadMap_Node:
         """
             Function to respond to the Map request
         """
-        fstring = self.directory + self.fname
-        with open(fstring, 'w') as fp:
+        
+        with open(self.fpath, 'w') as fp:
             json.dump(self.tree.dictionary, fp)
-        rospy.loginfo("Wrote Quadtree dictionary to: {}".format(fstring))
-        return getMapResponse(fstring)
+        rospy.loginfo("Wrote Quadtree dictionary to: {}".format(self.fpath))
+        return getMapResponse(self.fpath)
 
 
 
