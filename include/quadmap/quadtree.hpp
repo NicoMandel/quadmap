@@ -35,7 +35,8 @@ private:
     // Private member functions
     bool setMothers(uint32_t idx);
 
-    std::vector<uint32_t> getNeighborsIdcs(uint32_t idx);
+    std::vector<uint32_t> getNeighborsIdcs(uint32_t idx, int width, int height);
+    uint32_t getChild(uint32_t m_idx, Point pt);
    
 
 public:
@@ -56,7 +57,7 @@ public:
     // Functions using containers for multiple elements
     // TODO: turn this into a hash map
     std::unordered_map<uint32_t, Point> getIndices(std::vector<Point> pts);
-    std::vector<uint32_t> Quadtree::getIndicesVec(std::vector<Point> pts);         // the non-hash map version, where the indices are corresponding 
+    std::vector<uint32_t> Quadtree::getIndicesVec(std::vector<Point> pts, int width);         // the non-hash map version, where the indices are corresponding 
     std::unordered_map<uint32_t, Point> reduceIdcs(std::unordered_map<uint32_t, Point>&);
     std::vector<uint32_t> reduceIdcs(std::vector<uint32_t> pt_idcs, int width, int height);
 

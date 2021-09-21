@@ -1,6 +1,7 @@
 #include "quadmap/quadtree.hpp"
 #include <ros/ros.h>
 #include <sensor_msgs/PointCloud.h>
+#include <geometry_msgs/Point32.h>
 
 
 // const ptrs in C++ https://answers.ros.org/question/212857/what-is-constptr/

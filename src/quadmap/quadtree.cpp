@@ -132,12 +132,65 @@ std::unordered_map<uint32_t, Point> Quadtree::getIndices(std::vector<Point> pts)
     return outputs;
 }
 
-std::vector<uint32_t> Quadtree::getIndicesVec(std::vector<Point> pts){
-    std::vector<uint32_t> idcs(pts.size());
+
+// TODO: could use Eigen here...
+std::vector<uint32_t> Quadtree::getIndicesVec(std::vector<Point> pts, int width, int height){
+    // for each point, have a vector with the length of depth
+    std::vector<std::vector<uint32_t>> idcs(pts.size(), std::vector<uint32_t>(maxd));
+    std::vector<bool> found(pts.size(), false);
+
+    uint8_t level;
+    // for every level, iterate over all the points
+    for (level = 2; level <= maxd; level++){
+        // for every point
+        for (int i = 0; i < pts.size(); i++){
+            uint32_t curr_idx = idcs.at(i).at(level-1);
+            // if the index has not been found yet
+            if (!found.at(i)){
+                Point curr_pt = pts.at(i);
+                // find the child index
+                uint32_t ch_idx = getChild(curr_idx, curr_pt);
+                // insert the child index into the vector of vectors
+                idcs.at(i).at(level) = ch_idx;
+            }
+            else{
+                idcs.at(i).at(level) = curr_idx;
+            }
+        }
+
+        // Now iterate over the points again - and look at the neighborhood
+        for (int i = 0; i < pts.size(); i++){
+            if (!found.at(i)){
+                uint32_t own_idx = idcs.at(i).at(level);
+                std::vector<uint32_t> neighbors = getNeighborsIdcs(i, width, height);
+                // set the default value of "found" to true
+                bool f = true;
+                // for every neighbor
+                for (int j = 0; j < neighbors.size(); j++){
+                    // we are still in "level" - look at the index the neighbor has 
+                    uint32_t neighbor_idx = idcs.at(neighbors.at(j)).at(level);
+                    // if any of the neighbors has the same index
+                    if (neighbor_idx == own_idx) f = false;
+                }
+                found.at(i) = f;
+            }
+        }
+    }
+
     for (int i = 0; i<pts.size(); i++){
         idcs.at(i) = getIndex(pts.at(i));
     }
-    return idcs;
+    return idcs.at(level);
+}
+
+// get the index of the child -> this will always work, since a point has 0 extent - so it will always be there
+uint32_t Quadtree::getChild(uint32_t m_idx, Point pt){
+    uint32_t left, right;
+    left = getLeftDaughterIdx(m_idx);
+    right = getRightDaughterIdx(m_idx);
+    for (uint32_t child = left; child <= right; child++){
+        if (pt.isinbox(getBox(child))) return child;
+    }
 }
 
 // The index reducing function. Is currently O(n^2)
@@ -247,7 +300,10 @@ std::vector<uint32_t> getNeighborsIdcs(uint32_t idx, int width, int height){
     {
         for (int j = -1; j <= 1; j++)       // for every column
         {
-            if(i >= 0 && i < width && j >= 0 && j < height) neighbors.push_back(i * width + j);
+            // TODO - add col and row in here
+            uint32_t r = row + i;
+            uint32_t c = col + j;
+            if(c >= 0 && c < width && r >= 0 && r < height) neighbors.push_back(r * width + c);
         }
     }
 
