@@ -82,6 +82,22 @@ def generatePoints(bounds=(0,100), n=5):
         pt_dict[(sample_x[i], sample_y[i])] = vals[i,:]
     return pt_dict
 
+def getpts(bounds=(0,100), n=5, prob_model=[[0.7, 0.3], [0.3, 0.7]]):
+    prob_model = np.asarray(prob_model)
+    sample_x = np.random.uniform(bounds[0], bounds[1], n)
+    sample_y  = np.random.uniform(bounds[0], bounds[1], n)
+
+    pt_dict = {}
+    sample_bounds = tuple([50, 75])
+    for i in range(n):
+        if (sample_x[i] > sample_bounds[0] and sample_x[i] < sample_bounds[1] and sample_y[i] > sample_bounds[0] and sample_y[i] < sample_bounds[1]):
+            sam = generate_sample(1, prob_model)
+        else:
+            sam = generate_sample(0, prob_model)
+        pt_dict[(sample_x[i], sample_y[i])] = sam
+    return pt_dict
+    
+
 def test_points_pruning(qt : quadt.Quadtree):
     pts = generatePoints()
     idcs = qt.find_idcs(pts)
@@ -153,7 +169,7 @@ def test_four_cycles(qt : quadt.Quadtree) -> None:
 def test_single_cycle(qt : quadt.Quadtree, axs : plt.Axes, idx : int, width : int) -> None:
     c = idx % width
     r = idx // width
-    pt_dict = generatePoints()
+    pt_dict = getpts()
     idcs_dict = qt.find_idcs(pt_dict)
     print("{} set of points: {}".format(idx+1, idcs_dict))
     reduced_idcs_dict = qt.reduce_idcs(idcs_dict)
@@ -212,8 +228,8 @@ def testlogodds():
         print("Updated belief is: {}".format(bel))
 
 
-def generate_sample(idx, prob_model):
-    sam = np.random.choice(prob_model.shape[0], 1, p=prob_model[:,idx])
+def generate_sample(observed_val, prob_model):
+    sam = np.random.choice(prob_model.shape[0], 1, p=prob_model[:, observed_val])
     return sam
 
 def updatebelief(sample, model, prior, init_belief):
@@ -252,12 +268,12 @@ def testQTmodels(qt : quadt.Quadtree):
 if __name__=="__main__":
     np.random.seed(20)
     outside_bounds = (100, 100)
-    testlogodds()
+    # testlogodds()
 
     qt = quadt.Quadtree(scale=outside_bounds[0], max_depth=4)
-    testQTmodels(qt)
+    # testQTmodels(qt)
     # test_depth_calc(qt)
-    # test_four_cycles(qt)
+    test_four_cycles(qt)
     # testdict = {1: "val1", 2: "val2", 3: "val3", 4:"val4"}
     # a = iter(testdict)
     # b = next(a)

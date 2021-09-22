@@ -37,16 +37,11 @@ class Box:
 
 class QuadtreeElement:
 
-    # for 2 class case - prior is 0.5 and 
-    # prior = np.asarray([0.5, 0.5])
-    # sensor_model = np.asarray([[0.8, 0.2], [0.2, 0.8]])
-    # logmodel = 
-    # use a log-odds updating - see Thrun, p. 75
-
     @classmethod
     def instantiate(cls, prior = [0.5, 0.5], sensor_model=[[0.7, 0.3], [0.3, 0.7]]):
         """
-            Method to instantiate class variables to be used for updating the tree
+            Method to instantiate class variables to be used for updating the tree. 
+            Has to be called before inserting the first element
         """
         prior = np.asarray(prior)
         sensor_model = np.asarray(sensor_model)
@@ -88,6 +83,14 @@ class QuadtreeElement:
             Function to turn the log-odds back into probabilities (belief)
         """
         return (1. - (1. / (1. + np.exp(self.val)))) if self.val is not None else None
+
+    def getMaxProbability(self):
+        """
+            Function to get the probability at its maximum index
+            only works if val is not none
+        """
+        return self.getprobabilities()[self.getMaxVal()]
+
 
     def getlogprobs(self):
         """
@@ -201,9 +204,8 @@ class Quadtree:
             Basic function to insert a value into a specific index.
             Performs a check whether the index already exists
         """
-        # if the index does not exist, create it with default None (if no value is given - this is mainly for mothers)
+        # if the index does not exist, create it. If no value is given, use default None (if no value is given - this is mainly for mothers)
         if idx not in self.dictionary:
-
             self.dictionary[idx] = QuadtreeElement(index=idx, val=value)
         # if it exists, but it's None, but the new value isn't, put in the new value.
         if value is not None:
@@ -211,7 +213,7 @@ class Quadtree:
         
     def insert_points(self, idx_val_dict: dict) -> None:
         for k, v in idx_val_dict.items():
-            self.insert_point(k, tuple(v) if v is not None else v)
+            self.insert_point(k, v)
 
     def update_idx(self, idx, value=None):
         """
@@ -406,7 +408,8 @@ class Quadtree:
     def plot_tree(self, ax):
         for k, v in self.getallboxes().items():
             lo, w, h = v.matplotlib_format()
-            r = Rectangle(lo, w, h, facecolor=self[k].val if self[k].val is not None else 'none', edgecolor='red', lw=1, alpha=0.3)
+            alpha = 0 if self[k].val is None else self[k].getMaxProbability()
+            r = Rectangle(lo, w, h, facecolor='red' if self[k].getMaxVal() == 1 else 'blue', edgecolor='red', lw=1, alpha=alpha)
             ax.add_patch(r)
     
     def getMotherChain(self, idx):
