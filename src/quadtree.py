@@ -146,6 +146,8 @@ class Quadtree:
     def __init__(self, low = (0., 0.), scale = 1.0, max_depth = 4) -> None:
         QuadtreeElement.instantiate()
         self.dictionary = {1: QuadtreeElement(index=1)}
+        # see if this works
+        self[1].val = self[1].init_prior
         if max_depth > self.MAX_DEPTH:
             raise ValueError("{} too deep for Implementation - {} is maximum".format(self.max_depth, self.MAX_DEPTH))
         self.max_depth = max_depth
@@ -444,6 +446,20 @@ class Quadtree:
             if nds >= idx:
                 return i    
         raise ValueError("maxdepth reached. node is deeper than possible levels")
+
+    def find_priors(self, insertion_idcs_dict : dict) -> dict:
+        """
+            Method to find the priors by recursively going through the mothers.
+            Return the lowest level prior that can be found
+        """
+        return_dict = {}
+        for k in insertion_idcs_dict.keys():
+            midx = k
+            while(midx > 1):
+                midx = self.getmother_idx(midx)
+                if midx in self.dictionary and self[midx].val is not None:
+                    return_dict[k] = self[midx].getlogprobs()
+        return return_dict
 
     @classmethod
     def getMaxBoxes(cls,l=1):

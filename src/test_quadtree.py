@@ -174,10 +174,16 @@ def test_single_cycle(qt : quadt.Quadtree, axs : plt.Axes, idx : int, width : in
     print("{} set of points: {}".format(idx+1, idcs_dict))
     reduced_idcs_dict = qt.reduce_idcs(idcs_dict)
     print("Reduced indices:\n{}".format(reduced_idcs_dict))
+    prs = qt.find_priors(reduced_idcs_dict)
+    # ! CONTINUE HERE ##############################################
+    # TODO: CONTINUE HERE -> test whether this actually works at lower level indexing as well! If not only the first mother is inserted
+    # ! CONTINUE HERE #################################
+    # use the priors to update the values dynamically
     qt.insert_points(reduced_idcs_dict)
+    qt.printvals()
     disp_pts = np.asarray(list(pt_dict.keys()))
-    axs[r, c].scatter(disp_pts[:,0], disp_pts[:,1])
     qt.plot_tree(axs[r,c])
+    axs[r, c].scatter(disp_pts[:,0], disp_pts[:,1], c='black')
     axs[r, c].set_xlim(0, 100)
     axs[r, c].set_ylim(0, 100)
     axs[r, c].set_title("{} points".format(idx+1))
