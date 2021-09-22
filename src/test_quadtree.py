@@ -186,7 +186,7 @@ def testlogodds():
     print("Function to test the log odds")
     init_prior = np.asarray([0.5, 0.5])
     logprior = np.log((init_prior / (1. - init_prior)))
-    sens_model = np.asarray([[0.8, 0.2], [0.2, 0.8]])
+    sens_model = np.asarray([[0.7, 0.3], [0.3, 0.7]])
     log_model = np.log( sens_model / (1. - sens_model))
     print("initial prior:\n{}".format(init_prior))
     print("Log prior:\n{}".format(logprior))
@@ -198,7 +198,7 @@ def testlogodds():
     cts_obs = np.zeros((10, init_prior.shape[0]))
     cts_obs[:] = logprior
 
-    for i in range(10):
+    for i in range(3):
         print("Iteration: {}".format(i))
         true_state = 1
         observation = generate_sample(true_state, sens_model)
@@ -210,7 +210,6 @@ def testlogodds():
         cts_obs[i+1, :] = log_n
         bel = getbelief(log_n)
         print("Updated belief is: {}".format(bel))
-
 
 
 def generate_sample(idx, prob_model):
@@ -225,17 +224,44 @@ def updatebelief(sample, model, prior, init_belief):
 def getbelief(log_odds):
     return (1. - (1. / ( 1. + np.exp(log_odds))))
 
+def testQTmodels(qt : quadt.Quadtree):
+    print("==============================")
+    print("Quadtree initalised")
+    print("Initial Element {}".format(qt[1]))
+    print("Sensor model: {}".format(type(qt[1]).sensor_model))
+    print("Prior: {}".format(type(qt[1]).init_prior))
+
+    nidx = 2
+    print("Inserting a new index with a None value: {}".format(nidx))
+    qt.insert_idx(nidx)
+    print("Values currently held in the node: {}".format(qt[nidx].getprobabilities()))
+    not_log_model = np.array([[0.7, 0.3], [0.3, 0.7]])
+    sam = generate_sample(1, not_log_model)
+    print("Generated sample: {}".format(sam))
+    print("testing the updating of the value.")
+    qt.insert_point(nidx, sam)    
+    print("Element after inserting: {}".format(qt[nidx].getprobabilities()))
+    qt.update_idx(nidx, sam)
+    print("Element after updating: {}".format(qt[nidx].getprobabilities()))
+    qt.update_idx(nidx, sam)
+    print("Element after updating: {}".format(qt[nidx].getprobabilities()))
+    qt.update_idx(nidx, 0)
+    print("Element after updating: {}".format(qt[nidx].getprobabilities()))
+
+
 if __name__=="__main__":
     np.random.seed(20)
     outside_bounds = (100, 100)
-    # qt = quadt.Quadtree(scale=outside_bounds[0], max_depth=4)
+    testlogodds()
+
+    qt = quadt.Quadtree(scale=outside_bounds[0], max_depth=4)
+    testQTmodels(qt)
     # test_depth_calc(qt)
     # test_four_cycles(qt)
     # testdict = {1: "val1", 2: "val2", 3: "val3", 4:"val4"}
     # a = iter(testdict)
     # b = next(a)
 
-    testlogodds()
 
     # print(b)
     # while a:

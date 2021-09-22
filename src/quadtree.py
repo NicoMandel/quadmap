@@ -38,34 +38,68 @@ class Box:
 class QuadtreeElement:
 
     # for 2 class case - prior is 0.5 and 
-    prior = np.asarray([0.5, 0.5])
-    sensor_model = np.asarray([[0.8, 0.2], [0.2, 0.8]])
+    # prior = np.asarray([0.5, 0.5])
+    # sensor_model = np.asarray([[0.8, 0.2], [0.2, 0.8]])
     # logmodel = 
     # use a log-odds updating - see Thrun, p. 75
 
+    @classmethod
+    def instantiate(cls, prior = [0.5, 0.5], sensor_model=[[0.7, 0.3], [0.3, 0.7]]):
+        """
+            Method to instantiate class variables to be used for updating the tree
+        """
+        prior = np.asarray(prior)
+        sensor_model = np.asarray(sensor_model)
+        
+        # log forms
+        cls.sensor_model = np.log( sensor_model / (1. - sensor_model))
+        cls.init_prior = np.log(( prior / (1. - prior)))
+
     def __init__(self, index, val=None) -> None:
+        """
+            Initialisation of an empty Node - empty, because val == None - used for checks
+        """
         self.index = index
-        self.val = val
+        self.val = self.insert(val) if val is not None else val
+        # self.val = val
 
     def update(self, value) -> None:
-        self.val = self.val + np.log()
-        nval = np.asarray(self.val) * np.asarray(value)
-        self.val = tuple(nval)
-    
-    def insert(self, val) -> None:
-        self.val = val
+        """
+            Using the log update rule on the sensor model
+        """
+        model = type(self).sensor_model
+        # getting the observation out
+        obs = np.squeeze(model[:, value])
+        init_pr = type(self).init_prior
+        pr = self.val
+        nval = pr + obs - init_pr
+        self.val = nval
 
-    def getVal(self):
+    def insert(self, val) -> None:
+        """
+            val is either 0.0 or 1.0. The new value should be updated in a bayesian fashion
+        """
+        model = type(self).sensor_model
+        obs = np.squeeze(model[:,val])
+        self.val = obs
+
+    def getprobabilities(self):
         """
             Function to turn the log-odds back into probabilities (belief)
         """
-        return (1. - (1. / (1. + np.exp(self.val))))
+        return (1. - (1. / (1. + np.exp(self.val)))) if self.val is not None else None
 
+    def getlogprobs(self):
+        """
+            Function to return the log-odds
+        """
+        return self.val
 
     def getMaxVal(self):
         """
             Function to get the argmax - basically whether it is an interesting class or not. 
         """
+        return np.argmax(self.val)
 
 
     def __repr__(self) -> str:
@@ -107,6 +141,7 @@ class Quadtree:
     OFFSET = 2
 
     def __init__(self, low = (0., 0.), scale = 1.0, max_depth = 4) -> None:
+        QuadtreeElement.instantiate()
         self.dictionary = {1: QuadtreeElement(index=1)}
         if max_depth > self.MAX_DEPTH:
             raise ValueError("{} too deep for Implementation - {} is maximum".format(self.max_depth, self.MAX_DEPTH))
@@ -168,6 +203,7 @@ class Quadtree:
         """
         # if the index does not exist, create it with default None (if no value is given - this is mainly for mothers)
         if idx not in self.dictionary:
+
             self.dictionary[idx] = QuadtreeElement(index=idx, val=value)
         # if it exists, but it's None, but the new value isn't, put in the new value.
         if value is not None:
@@ -177,12 +213,12 @@ class Quadtree:
         for k, v in idx_val_dict.items():
             self.insert_point(k, tuple(v) if v is not None else v)
 
-    def update_idx(self, idx, ch_num=None):
+    def update_idx(self, idx, value=None):
         """
             updating an index
         """
         it = self[idx]
-        it.update(ch_num=ch_num)
+        it.update(value=value)
 
     def __getitem__(self, idx):
         """
