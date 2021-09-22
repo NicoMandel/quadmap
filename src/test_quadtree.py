@@ -170,14 +170,15 @@ def test_single_cycle(qt : quadt.Quadtree, axs : plt.Axes, idx : int, width : in
     c = idx % width
     r = idx // width
     pt_dict = getpts()
+    # TODO 1: continue here to see whether the new indexing function works
+    qt.insertion_idcs()#! values here)
+    # TODO 1 - careful! width is not the width of the image that we are looking for. need the width for the neighbourhood
     idcs_dict = qt.find_idcs(pt_dict)
     print("{} set of points: {}".format(idx+1, idcs_dict))
     reduced_idcs_dict = qt.reduce_idcs(idcs_dict)
     print("Reduced indices:\n{}".format(reduced_idcs_dict))
     prs = qt.find_priors(reduced_idcs_dict)
-    # ! CONTINUE HERE ##############################################
-    # TODO: CONTINUE HERE -> test whether this actually works at lower level indexing as well! If not only the first mother is inserted
-    # ! CONTINUE HERE #################################
+    # TODO 2: fix this -> test whether this actually works at lower level indexing as well! If not only the first mother is inserted
     # use the priors to update the values dynamically
     qt.insert_points(reduced_idcs_dict)
     qt.printvals()

@@ -4,6 +4,7 @@
     File to write a hashed implementation of a Quadtree and display it.
 """
 
+from operator import truediv
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
@@ -329,7 +330,77 @@ class Quadtree:
             print("test debug line")
             # TODO: continue here to think about whether this is a good idea / good approach.
 
+    def insertion_idcs(self, pts : list, width : int, height : int):
+        """
+            Function that finds the indices where to insert. Already does the pruning.
+            Requires a list of "Point" objects
+        """
+        assert len(pts) == (height * width)
+        # initialise a big array where to insert the points
+        arr = np.ones((len(pts),self.max_depth))
 
+        # initialise a boolean list, that says whether to continue
+        ct_vec = np.ones(len(pts),dtype=np.bool)
+
+        # for every level
+        for i in range(1, self.max_depth):
+            # early stopping
+            if not np.any(ct_vec):
+                # fill in last column
+                arr[:,-1] = arr[:,i-1]
+                break
+
+            # actual work
+            for j, pt in enumerate(pts):
+                curr_box = arr[j,i-1]
+
+                # if the boolean vector is still valid
+                if ct_vec[j]:
+                    ds = self.getalldaughters(curr_box)
+                    for d in ds:
+                        if pt.insideBox(self.getBox(d)):
+                            arr[j,i] = d
+                            break
+                # if the boolean vector says we should not continue
+                else:
+                    # just project the value forward
+                    arr[j,i] = curr_box
+
+            # now look at the neighborhood of each point
+            for j, pt in enumerate(pts):
+                own_val = arr[j,i]
+                neighborhood_idcs = self.getNeighborhood(j, width=width, height=height)
+                # ? could use the indices here in numpy form? Smart indexing? 
+                ct = False
+                for neighb_idx in neighborhood_idcs:
+                    # we are still in level i
+                    # if any of the neighbors has the same index - continue
+                    # if none of the neighbors has the same index - stop
+                    # TODO: check the triplet indexing - if one already stopped? Could that scenario exist? Or does that violate topology rules?  
+                    # ! Continue here
+                    neighb_val = arr[neighb_idx, i]
+                    if neighb_val == own_val:
+                        ct = True
+                ct_vec[j] = ct
+
+        # return the last row where the insertion indices **should** be held!
+        return arr[:,-1]
+
+
+
+    def getNeighborhood(idx : int, width : int, height : int):
+        """
+            Function to get the moore neighborhood with 1 of a pixel -> returns the 1D index
+        """
+        idcs = []
+        r = idx // width
+        c = idx % width
+        for i in range(-1, 2):
+            for j in range(-1, 2):
+                idx = (r + i) * width + (c + j)
+                if ((r+i) >= 0 and (r+i) < height and (c+j) >= 0 and (c+j) < width):
+                    idcs.append(idx)
+        return idcs
 
     def get_current_depth(self):
         return self.current_depth
@@ -339,7 +410,7 @@ class Quadtree:
     
     def getBox(self, idx):
         """
-            Implementation 1:1 from the book
+            Implementation from the book
         """
 
         offset = [0.0, 0.0]
