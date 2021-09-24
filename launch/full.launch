@@ -8,6 +8,7 @@
   <arg name="control" default="false"/>
   <arg name="world" default="serf"/>
   <arg name="mode" default="hybrid-freq"/>
+  <arg name="rate" default="1"/>
   <!-- Values for the camera calibration file -->
   <arg name="out_width" default="256"/> <!-- 1920 / 256 / 128 --> 
   <arg name="out_height" default="192"/> <!-- 1080 / 192 / 96 -->
@@ -33,7 +34,7 @@
    
   <!-- Simulation or rosbag -->
   <!-- Rosbag -->
-  <node unless="$(arg simulation)" pkg="rosbag" type="play" name="player" output="screen" args="--clock $(find quadmap)/rosbag/$(arg mode).bag"/>
+  <node unless="$(arg simulation)" pkg="rosbag" type="play" name="player" output="screen" args="--clock -r $(arg rate) $(find quadmap)/rosbag/$(arg mode).bag"/>
   
   <!-- Simulation -->
   <include if="$(arg simulation)" file="$(find desiccation_cnn)/launch/simulation.launch">
