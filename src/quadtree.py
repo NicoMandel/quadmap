@@ -10,7 +10,7 @@ from matplotlib.patches import Rectangle
 import json
 
 from geometry_msgs.msg import Point32
-# 
+import pickle
 
 class Point:
 
@@ -466,7 +466,7 @@ class Quadtree:
         """
             Function for correct typecasting
         """
-        if isinstance(pt, np.ndarray):
+        if isinstance(pt, tuple):
             return Point(pt[0], pt[1])
         elif isinstance(pt, Point32):
             return Point(pt.x, pt.y)
@@ -610,6 +610,20 @@ class Quadtree:
         return ret_arr
 
 
+    def save(self, fpath):
+        """
+            Function to save the quadtree as a pickle file
+        """
+        with open(fpath, 'wb') as f:
+            pickle.dump(self, f)
+        return "saved file to {}".format(fpath)
+
+    @classmethod
+    def load(cls, fpath):
+        with open(fpath, 'rb') as f:
+            tree = pickle.load(f)
+        return tree
+    
     @classmethod
     def getMaxBoxes(cls,l=1):
         return ((4**l) - 1) / 3

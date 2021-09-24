@@ -8,6 +8,8 @@ import quadtree as quadt
 import numpy as np
 from matplotlib.patches import Rectangle
 
+import os.path
+
 ############################################
 # Not QT-tree class functions following here
 ############################################
@@ -162,8 +164,15 @@ def test_index_reduction(qt : quadt.Quadtree) -> None:
 def test_four_cycles(qt : quadt.Quadtree) -> None:
     plots = 3
     fig, axs = plt.subplots(3,plots)
+    dirpath = os.path.abspath(os.path.dirname(__file__))
     for i in range(3 * plots):
         test_single_cycle(qt, axs, i, plots)
+        if not i % 2:
+            fpath = os.path.join(dirpath, "output", "quadtree{}.pkl".format(i))
+            test_saving(qt, fpath)
+        else:
+            fpath = os.path.join(dirpath, "output", "quadtree{}.pkl".format(i-1))
+            qtt = test_loading(fpath)
     plt.show()
 
 def test_single_cycle(qt : quadt.Quadtree, axs : plt.Axes, idx : int, width : int) -> None:
@@ -181,7 +190,6 @@ def test_single_cycle(qt : quadt.Quadtree, axs : plt.Axes, idx : int, width : in
     # print("{} set of points: {}".format(idx+1, idcs_dict))
     # reduced_idcs_dict = qt.reduce_idcs(idcs_dict)
     # print("Reduced indices:\n{}".format(reduced_idcs_dict))
-    # TODO CONTINUE HERE -> insert_idcs is now a numpy vector
     print(insert_arr)
     prs = qt.find_priors_arr(insert_arr)
     # use the priors to update the values dynamically
@@ -191,12 +199,20 @@ def test_single_cycle(qt : quadt.Quadtree, axs : plt.Axes, idx : int, width : in
     qt.insert_points_arr(values = pt_dict.values(), idcs = insert_arr, priors = prs)
     qt.printvals()
     disp_pts = np.asarray(list(pt_dict.keys()))
+
     qt.plot_tree(axs[r,c])
     axs[r, c].scatter(disp_pts[:,0], disp_pts[:,1], c='black')
     axs[r, c].set_xlim(0, 100)
     axs[r, c].set_ylim(0, 100)
     axs[r, c].set_title("{} points".format(idx+1))
 
+def test_saving(qt: quadt.Quadtree, fpath):
+    retmesg = qt.save(fpath)
+    print(retmesg)
+
+def test_loading(fpath) -> quadt.Quadtree:
+    tree = quadt.Quadtree.load(fpath)
+    return tree
 
 def test_depth_calc(qt : quadt.Quadtree):
     """
