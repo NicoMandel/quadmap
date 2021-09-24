@@ -22,14 +22,17 @@ class QuadMap_Node:
 
     def __init__(self) -> None:
         topic = rospy.get_param("pcl_topic", default="pcl_plane")
-        max_depth = rospy.get_param("max_depth", default=14)
-        scale = rospy.get_param("qt_scale", default=50)
+        max_depth = rospy.get_param("max_depth", default=16)
+        scale = rospy.get_param("qt_scale", default=100)
+
+        self.img_width = rospy.get_param("out_width", default=256)
+        self.img_height = rospy.get_param("out_height", default=192)
         
         # initialise the tree
-        self.tree = qt.Quadtree(low=(-50, -50), scale=scale, max_depth=max_depth)
+        # TODO: set these bounds accordingly 
+        self.tree = qt.Quadtree(low=(-50, -10), scale=scale, max_depth=max_depth)
         
         # advertising a service
-        # TODO: make this a service that writes to a "tmp" directory and passes the filename
         self.serv = rospy.Service('getMap', getMap, self.getMap)
 
         # file directory to write to 
@@ -59,10 +62,13 @@ class QuadMap_Node:
         pts = msg.points
         # val_dict = self.decode_cmap(pts, rgb_channel)
         val_dict = self.decode_intensity(pts, intensity_channel)
-        idcs = self.tree.find_idcs(val_dict)
+        idcs = self.tree.insertion_idcs(pts, self.img_width, self.img_height)
+        prs = self.tree.find_priors_arr(idcs)
+        self.tree.insert_points_arr(values=val_dict.values(), idcs = idcs, priors = prs)
 
-        reduced_idcs_dict = self.tree.reduce_idcs(idcs)
-        self.tree.insert_points(reduced_idcs_dict)
+        # reduced_idcs_dict = self.tree.reduce_idcs(idcs)
+        # TODO: figure out which one of these is 
+        # self.tree.insert_points(reduced_idcs_dict)
 
         # sending out on an image topic
         self.send_img()
@@ -89,7 +95,7 @@ class QuadMap_Node:
         pt_dict = {}
         for i, ch in enumerate(intensity):
             pt = pts[i]
-            pt_dict[tuple([pt.x, pt.y])] = ch
+            pt_dict[tuple([pt.x, pt.y])] = int(ch)
         
         return pt_dict
     

@@ -4,14 +4,13 @@
     File to write a hashed implementation of a Quadtree and display it.
 """
 
-from abc import abstractmethod
-from operator import index, truediv
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
 import json
 
-from numpy.lib import index_tricks
+from geometry_msgs.msg import Point32
+# 
 
 class Point:
 
@@ -395,9 +394,7 @@ class Quadtree:
         ct_vec = np.ones(len(pts),dtype=np.bool)
 
         # for every level
-        for i in range(1, self.max_depth+1):
-            # ? Debug function
-            print(arr)
+        for i in range(1, self.max_depth):
             # early stopping
             if not np.any(ct_vec):
                 # fill in last column
@@ -414,7 +411,8 @@ class Quadtree:
                 if ct_vec[j]:
                     ds = self.getalldaughters(curr_box)
                     for d in ds:
-                        if Point(pt[0], pt[1]).insideBox(self.getBox(d)):
+                        pt_t = self.getPoint(pt)
+                        if pt_t.insideBox(self.getBox(d)):
                             arr[j,i] = d
                             break
                 # if the boolean vector says we should not continue
@@ -425,9 +423,9 @@ class Quadtree:
             # now look at the neighborhood of each point
             for j, pt in enumerate(pts):
                 own_val = arr[j,i]
-                # neighborhood_idcs = self.getNeighborhood(j, width=width, height=height) #! reactivate this
-                neighborhood_idcs = list(range(len(pts)))
-                neighborhood_idcs.pop(j)    # all but the own
+                neighborhood_idcs = self.getNeighborhood(j, width=width, height=height) 
+                # neighborhood_idcs = list(range(len(pts)))
+                # neighborhood_idcs.pop(j)    # all but the own
                 # ? could use the indices here in numpy form? Smart indexing? 
                 ct = False
                 for neighb_idx in neighborhood_idcs:
@@ -464,6 +462,15 @@ class Quadtree:
     def ismaxdepth(self) -> bool:
         return True if self.current_depth >= self.max_levels else False
     
+    def getPoint(self, pt):
+        """
+            Function for correct typecasting
+        """
+        if isinstance(pt, np.ndarray):
+            return Point(pt[0], pt[1])
+        elif isinstance(pt, Point32):
+            return Point(pt.x, pt.y)
+
     def getBox(self, idx):
         """
             Implementation from the book
