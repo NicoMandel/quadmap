@@ -169,18 +169,26 @@ def test_four_cycles(qt : quadt.Quadtree) -> None:
 def test_single_cycle(qt : quadt.Quadtree, axs : plt.Axes, idx : int, width : int) -> None:
     c = idx % width
     r = idx // width
-    pt_dict = getpts()
-    # TODO 1: continue here to see whether the new indexing function works
-    qt.insertion_idcs()#! values here)
-    # TODO 1 - careful! width is not the width of the image that we are looking for. need the width for the neighbourhood
-    idcs_dict = qt.find_idcs(pt_dict)
-    print("{} set of points: {}".format(idx+1, idcs_dict))
-    reduced_idcs_dict = qt.reduce_idcs(idcs_dict)
-    print("Reduced indices:\n{}".format(reduced_idcs_dict))
-    prs = qt.find_priors(reduced_idcs_dict)
-    # TODO 2: fix this -> test whether this actually works at lower level indexing as well! If not only the first mother is inserted
+    bounds = (5,25) # points from 5 to 25
+    w = 3
+    h = 3
+    n = w * h
+    pt_dict = getpts(bounds=bounds, n=n)
+    insert_arr = qt.insertion_idcs(pts=pt_dict, width = w, height = h)
+    # The "insert_idcs" are already at the right levels. Now do the search from each of those idcs back up
+
+    # idcs_dict = qt.find_idcs(pt_dict)
+    # print("{} set of points: {}".format(idx+1, idcs_dict))
+    # reduced_idcs_dict = qt.reduce_idcs(idcs_dict)
+    # print("Reduced indices:\n{}".format(reduced_idcs_dict))
+    # TODO CONTINUE HERE -> insert_idcs is now a numpy vector
+    print(insert_arr)
+    prs = qt.find_priors_arr(insert_arr)
     # use the priors to update the values dynamically
-    qt.insert_points(reduced_idcs_dict)
+    print(prs)
+    print("Things to insert:\n{}\nat\n{}\nwith priors:\n{}".format(
+        pt_dict.values(), insert_arr, prs))
+    qt.insert_points_arr(values = pt_dict.values(), idcs = insert_arr, priors = prs)
     qt.printvals()
     disp_pts = np.asarray(list(pt_dict.keys()))
     qt.plot_tree(axs[r,c])
@@ -236,7 +244,7 @@ def testlogodds():
 
 
 def generate_sample(observed_val, prob_model):
-    sam = np.random.choice(prob_model.shape[0], 1, p=prob_model[:, observed_val])
+    sam = np.random.choice(prob_model.shape[0], p=prob_model[:, observed_val])
     return sam
 
 def updatebelief(sample, model, prior, init_belief):
@@ -273,11 +281,11 @@ def testQTmodels(qt : quadt.Quadtree):
 
 
 if __name__=="__main__":
-    np.random.seed(20)
+    np.random.seed(2)
     outside_bounds = (100, 100)
     # testlogodds()
 
-    qt = quadt.Quadtree(scale=outside_bounds[0], max_depth=4)
+    qt = quadt.Quadtree(scale=outside_bounds[0], max_depth=8)
     # testQTmodels(qt)
     # test_depth_calc(qt)
     test_four_cycles(qt)

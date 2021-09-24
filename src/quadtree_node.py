@@ -12,6 +12,7 @@ import json
 import os.path
 
 # For plotting the quadmap
+import matplotlib.pyplot as plt
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from matplotlib.figure import Figure
 from cv_bridge import CvBridge, CvBridgeError
@@ -42,8 +43,9 @@ class QuadMap_Node:
         rospy.Subscriber(topic, PointCloud, self.pcl_callback, queue_size=1)
 
         # Add a publisher for an image topic.
+        px = 1/plt.rcParams['figure.dpi']
         self.bridge = CvBridge()
-        self.fig = Figure()
+        self.fig = Figure(figsize=(1400*px,1400*px))
         self.canvas = FigureCanvas(self.fig)
         self.ax =self.fig.gca()
 

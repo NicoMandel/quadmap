@@ -4,11 +4,14 @@
     File to write a hashed implementation of a Quadtree and display it.
 """
 
-from operator import truediv
+from abc import abstractmethod
+from operator import index, truediv
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
 import json
+
+from numpy.lib import index_tricks
 
 class Point:
 
@@ -56,7 +59,7 @@ class QuadtreeElement:
             Initialisation of an empty Node - empty, because val == None - used for checks
         """
         self.index = index
-        self.val = self.insert(val) if val is not None else val
+        self.val = val
         # self.val = val
 
     def update(self, value) -> None:
@@ -71,7 +74,7 @@ class QuadtreeElement:
         nval = pr + obs - init_pr
         self.val = nval
 
-    def insert(self, val) -> None:
+    def insertNew(self, val) -> None:
         """
             val is either 0.0 or 1.0. The new value should be updated in a bayesian fashion
         """
@@ -79,11 +82,42 @@ class QuadtreeElement:
         obs = np.squeeze(model[:,val])
         self.val = obs
 
+    def override(self, idx, val):
+        """
+            method to override both the value and the index
+        """
+        self.val = val
+        self.index = idx 
+    
+    def overrideVal(self, val):
+        """
+            Method to override the value, not the index
+        """
+        self.val = val
+
+    def overrideIdx(self, idx):
+        """
+            Method to override the index, not the value
+        """
+        self.index = idx
+
+    @classmethod
+    def updateVal(cls, val, pr):
+        """
+            Class method to just calculate the updated value
+        """
+        model = cls.sensor_model
+        obs = np.squeeze(model[:, val])
+        init_pr = cls.init_prior
+        nval = pr + obs - init_pr
+        return nval
+
+
     def getprobabilities(self):
         """
             Function to turn the log-odds back into probabilities (belief)
         """
-        return (1. - (1. / (1. + np.exp(self.val)))) if self.val is not None else None
+        return (1. - (1. / (1. + np.exp(self.val)))) # if self.val is not None else None
 
     def getMaxProbability(self):
         """
@@ -218,6 +252,24 @@ class Quadtree:
         for k, v in idx_val_dict.items():
             self.insert_point(k, v)
 
+    def insert_points_arr(self, values, idcs, priors):
+        """
+            Function to insert the quadtree elements at the given position with a given prior
+        """
+        for i, val in enumerate(values):
+            nval = QuadtreeElement.updateVal(val, priors[i])
+            self.insert(idcs[i], nval)
+            
+
+    def insert(self, idx, val):
+        """
+            Function to insert value. If idx does not exist, create new. If it exists, then use the value to update it
+        """
+        if idx in self.dictionary:
+            self.dictionary[idx].overrideVal(val)           
+        else: 
+            self.dictionary[idx] = QuadtreeElement(idx, val)
+
     def update_idx(self, idx, value=None):
         """
             updating an index
@@ -337,28 +389,32 @@ class Quadtree:
         """
         assert len(pts) == (height * width)
         # initialise a big array where to insert the points
-        arr = np.ones((len(pts),self.max_depth))
+        arr = np.ones((len(pts),self.max_depth), dtype=np.int)
 
         # initialise a boolean list, that says whether to continue
         ct_vec = np.ones(len(pts),dtype=np.bool)
 
         # for every level
-        for i in range(1, self.max_depth):
+        for i in range(1, self.max_depth+1):
+            # ? Debug function
+            print(arr)
             # early stopping
             if not np.any(ct_vec):
                 # fill in last column
-                arr[:,-1] = arr[:,i-1]
+                # arr[:,-1] = arr[:,i-1]
+                # fill in all columns to the last column
+                arr[:,i:] = arr[:,i-1,np.newaxis]
                 break
 
             # actual work
             for j, pt in enumerate(pts):
-                curr_box = arr[j,i-1]
+                curr_box = arr[j,i-1].astype(np.int)
 
                 # if the boolean vector is still valid
                 if ct_vec[j]:
                     ds = self.getalldaughters(curr_box)
                     for d in ds:
-                        if pt.insideBox(self.getBox(d)):
+                        if Point(pt[0], pt[1]).insideBox(self.getBox(d)):
                             arr[j,i] = d
                             break
                 # if the boolean vector says we should not continue
@@ -369,26 +425,26 @@ class Quadtree:
             # now look at the neighborhood of each point
             for j, pt in enumerate(pts):
                 own_val = arr[j,i]
-                neighborhood_idcs = self.getNeighborhood(j, width=width, height=height)
+                # neighborhood_idcs = self.getNeighborhood(j, width=width, height=height) #! reactivate this
+                neighborhood_idcs = list(range(len(pts)))
+                neighborhood_idcs.pop(j)    # all but the own
                 # ? could use the indices here in numpy form? Smart indexing? 
                 ct = False
                 for neighb_idx in neighborhood_idcs:
                     # we are still in level i
                     # if any of the neighbors has the same index - continue
                     # if none of the neighbors has the same index - stop
-                    # TODO: check the triplet indexing - if one already stopped? Could that scenario exist? Or does that violate topology rules?  
-                    # ! Continue here
-                    neighb_val = arr[neighb_idx, i]
+                    neighb_val = arr[neighb_idx, i].astype(np.int)
                     if neighb_val == own_val:
                         ct = True
+                        break
                 ct_vec[j] = ct
 
         # return the last row where the insertion indices **should** be held!
         return arr[:,-1]
+        # return arr
 
-
-
-    def getNeighborhood(idx : int, width : int, height : int):
+    def getNeighborhood(self, idx : int, width : int, height : int):
         """
             Function to get the moore neighborhood with 1 of a pixel -> returns the 1D index
         """
@@ -398,7 +454,7 @@ class Quadtree:
         for i in range(-1, 2):
             for j in range(-1, 2):
                 idx = (r + i) * width + (c + j)
-                if ((r+i) >= 0 and (r+i) < height and (c+j) >= 0 and (c+j) < width):
+                if ((r+i) >= 0 and (r+i) < height and (c+j) >= 0 and (c+j) < width and ((i | j) != 0)):
                     idcs.append(idx)
         return idcs
 
@@ -531,6 +587,21 @@ class Quadtree:
                 if midx in self.dictionary and self[midx].val is not None:
                     return_dict[k] = self[midx].getlogprobs()
         return return_dict
+
+    def find_priors_arr(self, insert_arr, prior_size=2):
+        """
+            Method to find the priors by recursively walking back up through the vector
+        """
+        ret_arr = np.ones((insert_arr.size, prior_size))
+        for i in range(insert_arr.size):
+            midx = insert_arr[i]
+            while (midx > 0):
+                if midx in self.dictionary:
+                    ret_arr[i] = self[midx].val
+                    break
+                midx = self.getmother_idx(midx)
+        return ret_arr
+
 
     @classmethod
     def getMaxBoxes(cls,l=1):
