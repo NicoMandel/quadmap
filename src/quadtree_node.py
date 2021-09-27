@@ -35,7 +35,7 @@ class QuadMap_Node:
         
         # initialise the tree
         # TODO: set these bounds accordingly 
-        self.tree = qt.Quadtree(low=(-20, -30), scale=scale, max_depth=max_depth)
+        self.tree = qt.Quadtree(low=(-20, -20), scale=scale, max_depth=max_depth)
         
         # advertising a service
         # self.serv = rospy.Service('getMap', getMap, self.getMap)
@@ -70,8 +70,8 @@ class QuadMap_Node:
         # val_dict = self.decode_cmap(pts, rgb_channel)
         val_dict = self.decode_intensity(pts, intensity_channel)
         idcs = self.tree.insertion_idcs(pts, self.img_width, self.img_height)
-        prs = self.tree.find_priors_arr(idcs)
-        self.tree.insert_points_arr(values=val_dict.values(), idcs = idcs, priors = prs)
+        # prs = self.tree.find_priors_arr(idcs)
+        self.tree.insert_points_arr(values=val_dict.values(), idcs = idcs)
 
         # reduced_idcs_dict = self.tree.reduce_idcs(idcs)
         # TODO: figure out which one of these is 

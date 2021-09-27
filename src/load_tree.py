@@ -6,7 +6,7 @@ if __name__=="__main__":
     
     thisdir = os.path.dirname(__file__)
     outputdir = os.path.abspath(os.path.join(thisdir, '..', 'output'))
-    fname = os.path.join(outputdir, 'qt_21-09-27_10-23.pkl')
+    fname = os.path.join(outputdir, 'qt_21-09-27_18-56.pkl')
     tree = qt.Quadtree.load(fname)
     print("loading done. Proceeding with plotting")
 

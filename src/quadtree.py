@@ -61,7 +61,7 @@ class QuadtreeElement:
         self.val = val
         # self.val = val
 
-    def update(self, value) -> None:
+    def update(self, value, pr) -> None:
         """
             Using the log update rule on the sensor model
         """
@@ -69,7 +69,6 @@ class QuadtreeElement:
         # getting the observation out
         obs = np.squeeze(model[:, value])
         init_pr = type(self).init_prior
-        pr = self.val
         nval = pr + obs - init_pr
         self.val = nval
 
@@ -251,23 +250,34 @@ class Quadtree:
         for k, v in idx_val_dict.items():
             self.insert_point(k, v)
 
-    def insert_points_arr(self, values, idcs, priors):
+    def insert_points_arr(self, values, idcs):
         """
             Function to insert the quadtree elements at the given position with a given prior
         """
         for i, val in enumerate(values):
-            nval = QuadtreeElement.updateVal(val, priors[i])
-            self.insert(idcs[i], nval)
-            
+            self.insert(idcs[i], val)
+
+    def getPrior(self, idx):
+        """
+            Function to return a prior for a certain index
+        """
+        while (idx > 0):
+            if idx in self.dictionary:
+                prior = self[idx].val
+                break
+            idx = self.getmother_idx(idx)
+        return prior
 
     def insert(self, idx, val):
         """
             Function to insert value. If idx does not exist, create new. If it exists, then use the value to update it
         """
+        prior = self.getPrior(idx)
         if idx in self.dictionary:
-            self.dictionary[idx].overrideVal(val)           
-        else: 
-            self.dictionary[idx] = QuadtreeElement(idx, val)
+            self.dictionary[idx].update(val, pr=prior)           
+        else:
+            nval = QuadtreeElement.updateVal(val, prior)
+            self.dictionary[idx] = QuadtreeElement(idx, nval)
 
     def update_idx(self, idx, value=None):
         """
