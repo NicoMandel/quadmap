@@ -545,8 +545,10 @@ class Quadtree:
         for k, v in self.getallboxes().items():
             lo, w, h = v.matplotlib_format()
             alpha = 0 if self[k].val is None else self[k].getMaxProbability()
-            r = Rectangle(lo, w, h, facecolor='red' if self[k].getMaxVal() == 1 else 'blue', edgecolor='red', lw=1, alpha=alpha)
+            r = Rectangle(lo, w, h, facecolor='blue' if self[k].getMaxVal() == 1 else 'none', edgecolor='red', lw=.5, alpha=alpha)
             ax.add_patch(r)
+        ax.set_xlim(self.low[0], self.low[0] + self.scale)
+        ax.set_ylim(self.low[1], self.low[1] + self.scale)
     
     def getMotherChain(self, idx):
         idcs = {}
