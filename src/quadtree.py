@@ -639,3 +639,100 @@ class Quadtree:
     @classmethod
     def getMaxBoxes(cls,l=1):
         return ((4**l) - 1) / 3
+
+    @classmethod
+    def getIndicesPerLevel(cls, l):
+        """
+            Function to return the indices for each level
+        """
+        idcs = cls.getMaxBoxes(l)
+        b_idcs = cls.getMaxBoxes(l-1)
+        return (int(b_idcs), int(idcs))
+
+    def postprocess(self):
+        """
+            Postprocessing function to prune the tree depending on inserted values
+            May take really long.
+        """
+        # recurse through the levels
+        for l in range(self.max_depth, 2, -1):
+            # Get the indices for that level
+            idcs = self.getIndicesPerLevel(l)
+            # Run through all of the keys
+            orig_keys = list(self.dictionary.keys())
+            for k in orig_keys:
+                if (k > idcs[0]) and (k < idcs[1]):
+                    if k in self.dictionary:
+                        # Look at all the siblings that exist in the dictionary
+                        siblings = [sib for sib in self.getallsiblings(k) if sib in self.dictionary]
+                        # Get the probability
+                        own_val = self[k].getlogprobs()
+                        # sib_prob = []
+                        # if siblings:
+                        #     for sib in siblings:
+                        #         lp = self[sib].getlogprobs()
+                        #         sib_prob.append(lp)
+                        sib_prob = [self[sib].getlogprobs() for sib in siblings if siblings and self[sib].getlogprobs() is not None]
+                        if own_val is not None:
+                            sib_prob.insert(0, own_val)
+
+                        # only run the test if the list is not empty
+                        if sib_prob:
+                            # Test with the postprocess_equality function - if all children are reasonably equal
+                            if self.postprocess_equality(sib_prob):
+                                # replace the mother with the average of all the children
+                                midx = self.getmother_idx(k)
+                                m_new = np.asarray(sib_prob).mean(axis=0)
+                                # if the mother already exists, check if it is bigger than the mean
+                                if midx in self.dictionary:
+                                    m_val = self[midx].getlogprobs()
+                                    if abs(m_val[0]) < abs(m_new[0]):
+                                        self.postprocess_insert(midx, m_new)
+                                else:
+                                    self.postprocess_insert(midx, m_new)
+
+
+                                # for sib in siblings del self.dictionary[sib]
+                            # del [self.dictionary[sib] for sib in siblings]
+                                self.postprocess_clean(midx)        
+                        # else only gets hit if all the children are "none" values
+                        else:
+                            self.postprocess_clean(midx)
+
+
+    def postprocess_clean(self, idx):
+        # clean up all the daughters
+        chds = self.getalldaughters(idx)
+        for ch in chds:
+            if ch in self.dictionary:
+                del self.dictionary[ch]
+
+    def postprocess_insert(self, idx, val):
+        """
+            function to make the postprocess - insert step easier.
+            inserts the value at idx and deletes all children
+        """
+        if idx in self.dictionary:
+            self.dictionary[idx].overrideVal(val)
+        else:
+            self.dictionary[idx] = QuadtreeElement(val)
+        
+
+                    
+    def postprocess_equality(self, sib_vals):
+        """
+            Function to test the postprocessing equality. Has to return a bool.
+            If we are working with the log-odds, the sign is the same for all of them
+        """
+
+        arr = np.asarray(sib_vals)
+        s = np.sign(arr).sum(axis=0)
+        if s[0] == arr.shape[0]:
+            return True
+        else:
+            return False
+
+    
+
+
+        

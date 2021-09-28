@@ -6,9 +6,12 @@ if __name__=="__main__":
     
     thisdir = os.path.dirname(__file__)
     outputdir = os.path.abspath(os.path.join(thisdir, '..', 'output'))
-    fname = os.path.join(outputdir, 'qt_21-09-27_18-56.pkl')
+    fname = os.path.join(outputdir, 'qt_21-09-28_11-37.pkl')
     tree = qt.Quadtree.load(fname)
-    print("loading done. Proceeding with plotting")
+    print("Loading done. Proceeding with pruning")
+    tree.postprocess()
+
+    print("Pruning done, Proceeding with Plotting")
 
     fig = plt.figure(figsize=(15,9))
     ax = fig.gca()
