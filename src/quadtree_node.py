@@ -2,9 +2,9 @@
 
 import struct
 
-import matplotlib
 import rospy
 from sensor_msgs.msg import PointCloud
+# import quadtree as qt
 import quadtree as qt
 import numpy as np
 
@@ -15,7 +15,6 @@ import os.path
 
 # For plotting the quadmap
 import matplotlib.pyplot as plt
-import matplotlib.animation
 # from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 # from matplotlib.figure import Figure
 # from cv_bridge import CvBridge, CvBridgeError
@@ -150,7 +149,7 @@ class QuadMap_Node:
         now = datetime.now()
         d = now.strftime("%y-%m-%d_%H-%M")
         outputdir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'output'))
-        f = "qt_{}-normal.pkl".format(d)
+        f = "qt_{}_10.pkl".format(d)
         fnam = os.path.join(outputdir, f)
         self.tree.save(fnam)
         rospy.logwarn("Saved quadtree to: {}".format(fnam))

@@ -61,7 +61,7 @@ class QuadtreeElement:
         self.val = val
         # self.val = val
 
-    def update(self, value, pr) -> None:
+    def update_with_prior(self, value, pr) -> None:
         """
             Using the log update rule on the sensor model
         """
@@ -209,6 +209,9 @@ class Quadtree:
     def __str__(self) -> str:
         return self.__repr__()
 
+    def __len__(self):
+        return len(self.dictionary)
+
     def find_idx(self, point) -> int:
         """
             finds the smallest index for a point to be inserted into. Does not check whether this is occupied or not.
@@ -287,7 +290,7 @@ class Quadtree:
         """
         prior = self.getPrior(idx)
         if idx in self.dictionary:
-            self.dictionary[idx].update(val, pr=prior)           
+            self.dictionary[idx].update_with_prior(val, pr=prior)           
         else:
             nval = QuadtreeElement.updateVal(val, prior)
             self.dictionary[idx] = QuadtreeElement(idx, nval)

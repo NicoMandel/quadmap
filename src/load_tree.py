@@ -6,7 +6,7 @@ if __name__=="__main__":
     
     thisdir = os.path.dirname(__file__)
     outputdir = os.path.abspath(os.path.join(thisdir, '..', 'output'))
-    fname = os.path.join(outputdir, 'qt_21-09-28_11-37.pkl')
+    fname = os.path.join(outputdir, 'qt_21-09-29_15-14_10.pkl')
     tree = qt.Quadtree.load(fname)
     print("Loading done. Proceeding with pruning")
     tree.postprocess()
