@@ -49,6 +49,9 @@ class Quadtree:
         """
         return self.dictionary[idx]
 
+    def __len__(self):
+        return len(self.dictionary)
+    
     # Saving and loading
     def save(self, fpath):
         """
@@ -320,7 +323,7 @@ class Quadtree:
         if idx in self.dictionary:
             self.dictionary[idx].overrideVal(val)
         else:
-            self.dictionary[idx] = QuadtreeElement(val)
+            self.dictionary[idx] = QuadtreeElement(idx, val)
                     
     def postprocess_equality(self, sib_vals):
         """

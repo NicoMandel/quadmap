@@ -19,8 +19,8 @@
   <arg name="pcl_topic" default="pcl_plane"/>
   <arg name="world_frame" default="map"/>
   <!-- Arguments for the quadmap -->
-  <arg name="max_depth" default="16"/>
-  <arg name="qt_scale" default="70"/>
+  <arg name="max_depth" default="10"/>
+  <arg name="qt_scale" default="60"/>
   
 
   <!-- Setting the names depending on Simulation / Rosbag  -->
@@ -66,5 +66,5 @@
   <!-- The python node running the quadtree -->
   <param name="qt_scale" type="int" value="$(arg qt_scale)"/>
   <param name="max_depth" type="int" value="$(arg max_depth)"/>
-  <!-- <node pkg="quadmap" type="quadtree_node.py" name="quadtree_node" output="screen"/> -->
+  <node pkg="quadmap" type="quadtree_node.py" name="quadtree_node" output="screen"/>
 </launch>
