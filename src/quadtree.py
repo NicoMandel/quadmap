@@ -72,6 +72,19 @@ class QuadtreeElement:
         nval = pr + obs - init_pr
         self.val = nval
 
+    def update(self, value) -> None:
+        """
+            Using the log update rule. Does not require a prior.
+            Used with the normal quadtree insertion
+        """
+        model = type(self).sensor_model
+        # Getting the observation out
+        obs = np.squeez(model[:,value])
+        init_pr = type(self).init_prior
+        pr = self.val
+        nval = pr + obs - init_pr
+        self.val = nval
+
     def insertNew(self, val) -> None:
         """
             val is either 0.0 or 1.0. The new value should be updated in a bayesian fashion
@@ -715,7 +728,7 @@ class Quadtree:
         if idx in self.dictionary:
             self.dictionary[idx].overrideVal(val)
         else:
-            self.dictionary[idx] = QuadtreeElement(val)
+            self.dictionary[idx] = QuadtreeElement(idx, val)
         
 
                     
