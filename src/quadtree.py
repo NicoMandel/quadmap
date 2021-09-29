@@ -79,7 +79,7 @@ class QuadtreeElement:
         """
         model = type(self).sensor_model
         # Getting the observation out
-        obs = np.squeez(model[:,value])
+        obs = np.squeeze(model[:,value])
         init_pr = type(self).init_prior
         pr = self.val
         nval = pr + obs - init_pr
