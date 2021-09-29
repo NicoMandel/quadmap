@@ -73,6 +73,9 @@ class QuadMap_Node:
         # prs = self.tree.find_priors_arr(idcs)
         self.tree.insert_points_arr(values=val_dict.values(), idcs = idcs)
 
+        # TODO: after inserting points into the normal quadtree - what to do next? 
+        # ! pruning does not make sense - only in post - because otherwise the values would get inserted multiple times
+
         # reduced_idcs_dict = self.tree.reduce_idcs(idcs)
         # TODO: figure out which one of these is 
         # self.tree.insert_points(reduced_idcs_dict)
@@ -147,7 +150,7 @@ class QuadMap_Node:
         now = datetime.now()
         d = now.strftime("%y-%m-%d_%H-%M")
         outputdir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'output'))
-        f = "qt_{}.pkl".format(d)
+        f = "qt_{}-normal.pkl".format(d)
         fnam = os.path.join(outputdir, f)
         self.tree.save(fnam)
         rospy.logwarn("Saved quadtree to: {}".format(fnam))
