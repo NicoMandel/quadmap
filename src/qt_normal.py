@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 """
-    File to write a hashed implementation of a Quadtree and display it.
+    Standard implementation of a quadtree
 """
 
 import numpy as np
@@ -12,163 +12,7 @@ import json
 from geometry_msgs.msg import Point32
 import pickle
 
-class Point:
-
-    def __init__(self, x = 0., y = 0.) -> None:
-        
-        self.x = (x, y)
-    
-    def insideBox(self, box):
-        """
-            boolean test to decide whether the point is inside a given box
-        """
-        for i in range(len(box.lo)):
-            if self.x[i] < box.lo[i] or self.x[i] > box.hi[i]: return False
-        return True
-
-
-class Box:
-
-    def __init__(self, lo, hi):
-        self.lo = lo
-        self.hi = hi
-    
-    def matplotlib_format(self):
-        width = self.hi[0] - self.lo[0]
-        height = self.hi[1] - self.lo[1]
-        return self.lo, width, height
-
-class QuadtreeElement:
-
-    @classmethod
-    def instantiate(cls, prior = [0.5, 0.5], sensor_model=[[0.7, 0.3], [0.3, 0.7]]):
-        """
-            Method to instantiate class variables to be used for updating the tree. 
-            Has to be called before inserting the first element
-        """
-        prior = np.asarray(prior)
-        sensor_model = np.asarray(sensor_model)
-        
-        # log forms
-        cls.sensor_model = np.log( sensor_model / (1. - sensor_model))
-        cls.init_prior = np.log(( prior / (1. - prior)))
-
-    def __init__(self, index, val=None) -> None:
-        """
-            Initialisation of an empty Node - empty, because val == None - used for checks
-        """
-        self.index = index
-        self.val = val
-        # self.val = val
-
-    def update(self, value, pr) -> None:
-        """
-            Using the log update rule on the sensor model
-        """
-        model = type(self).sensor_model
-        # getting the observation out
-        obs = np.squeeze(model[:, value])
-        init_pr = type(self).init_prior
-        nval = pr + obs - init_pr
-        self.val = nval
-
-    def insertNew(self, val) -> None:
-        """
-            val is either 0.0 or 1.0. The new value should be updated in a bayesian fashion
-        """
-        model = type(self).sensor_model
-        obs = np.squeeze(model[:,val])
-        self.val = obs
-
-    def override(self, idx, val):
-        """
-            method to override both the value and the index
-        """
-        self.val = val
-        self.index = idx 
-    
-    def overrideVal(self, val):
-        """
-            Method to override the value, not the index
-        """
-        self.val = val
-
-    def overrideIdx(self, idx):
-        """
-            Method to override the index, not the value
-        """
-        self.index = idx
-
-    @classmethod
-    def updateVal(cls, val, pr):
-        """
-            Class method to just calculate the updated value
-        """
-        model = cls.sensor_model
-        obs = np.squeeze(model[:, val])
-        init_pr = cls.init_prior
-        nval = pr + obs - init_pr
-        return nval
-
-
-    def getprobabilities(self):
-        """
-            Function to turn the log-odds back into probabilities (belief)
-        """
-        return (1. - (1. / (1. + np.exp(self.val)))) # if self.val is not None else None
-
-    def getMaxProbability(self):
-        """
-            Function to get the probability at its maximum index
-            only works if val is not none
-        """
-        return self.getprobabilities()[self.getMaxVal()]
-
-
-    def getlogprobs(self):
-        """
-            Function to return the log-odds
-        """
-        return self.val
-
-    def getMaxVal(self):
-        """
-            Function to get the argmax - basically whether it is an interesting class or not. 
-        """
-        return np.argmax(self.val)
-
-
-    def __repr__(self) -> str:
-        return "{}, v: {}".format(self.index, self.val)
-            
-    def __str__(self) -> str:
-        return self.__repr__()
-
-    def getlevel(self):
-        """
-            function to calculate the depth of element. Mathematical equation. O(1). Coming from the geometric series that idx <= (1-4^n) / (1-4). Solve for n gives ceil(log4(idx * 3 + 1))
-        """
-        out = np.log(1 + 3 * self.index) / np.log(4)
-        return np.ceil(out) 
-
-    # make JSON serializable
-    def __json__(self):
-        return {
-            self.index: self.val
-        }
-
-    for_json = __json__
-
-    def toJSON(self):
-        return json.dumps(self, default=lambda o: o.__dict__, sort_keys=True, indent=4)
-
-    @classmethod
-    def from_json(cls, json):
-        obj = cls
-        obj.index = json.index
-        obj.val = json[obj.index]
-        return obj
-
+from quadtree import QuadtreeElement, Point, Box
 
 class Quadtree:
 
@@ -196,6 +40,15 @@ class Quadtree:
     def __str__(self) -> str:
         return self.__repr__()
 
+    def __getitem__(self, idx):
+        """
+            Function to return an element
+            Does not do any checking
+            Written this way to update to more complex data structures
+        """
+        return self.dictionary[idx]
+
+    # ! used
     def find_idx(self, point) -> int:
         """
             finds the smallest index for a point to be inserted into. Does not check whether this is occupied or not.
@@ -212,6 +65,7 @@ class Quadtree:
             if b > ds[-1]: break
         return b
 
+    # TODO: adapt
     def find_idcs(self, pts_dict: dict) -> dict:
         idcs = {}
         for pt, val in pts_dict.items():
@@ -219,7 +73,8 @@ class Quadtree:
                 pt = Point(pt[0], pt[1])
             idcs[self.find_idx(pt)] = val
         return idcs
-        
+    
+    # ! potentially use
     def insert_point(self, idx, val: tuple):
         """
             Code to insert a value into the dictionary by index.
@@ -233,7 +88,7 @@ class Quadtree:
             self.insert_idx(midx)
             midx = self.getmother_idx(midx)
             
-
+    # ! use
     def insert_idx(self, idx, value=None):
         """
             Basic function to insert a value into a specific index.
@@ -245,7 +100,8 @@ class Quadtree:
         # if it exists, but it's None, but the new value isn't, put in the new value.
         if value is not None:
             self[idx].insert(value) if self[idx].val is None else self[idx].update(value)
-        
+    
+    # ! use
     def insert_points(self, idx_val_dict: dict) -> None:
         for k, v in idx_val_dict.items():
             self.insert_point(k, v)
@@ -257,6 +113,7 @@ class Quadtree:
         for i, val in enumerate(values):
             self.insert(idcs[i], val)
 
+    # ! potentially use
     def getPrior(self, idx):
         """
             Function to return a prior for a certain index
@@ -285,14 +142,6 @@ class Quadtree:
         """
         it = self[idx]
         it.update(value=value)
-
-    def __getitem__(self, idx):
-        """
-            Function to return an element
-            Does not do any checking
-            Written this way to update to more complex data structures
-        """
-        return self.dictionary[idx]
     
     # ? currently unsued
     def split_idx(self, idx):
