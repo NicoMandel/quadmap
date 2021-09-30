@@ -21,6 +21,7 @@
   <!-- Arguments for the quadmap -->
   <arg name="max_depth" default="10"/>
   <arg name="qt_scale" default="70"/>
+  <arg name="low" default="-40"/>
   
   <!-- Argument for tf throttle -->
   <arg name="throttle" default="false"/>
@@ -38,6 +39,8 @@
    
   <!-- Simulation or rosbag -->
   <!-- Rosbag -->
+  <!-- Set the mode name to be able to use it for the filename writing -->
+  <param name="experiment" type="string" value="$(arg mode)"/>
   <node unless="$(arg simulation)" pkg="rosbag" type="play" required="true" name="player" output="screen" args="--clock -r $(arg rate) $(find quadmap)/rosbag/$(arg mode).bag $(arg throttle_topic)"/>
   
   <!-- Simulation -->
@@ -70,5 +73,6 @@
   <!-- The python node running the quadtree -->
   <param name="qt_scale" type="int" value="$(arg qt_scale)"/>
   <param name="max_depth" type="int" value="$(arg max_depth)"/>
-  <!-- <node pkg="quadmap" type="quadtree_node.py" name="quadtree_node" output="screen"/> -->
+  <param name="low" type="int" value="$(arg low)"/>
+  <node pkg="quadmap" type="quadtree_node.py" name="quadtree_node" output="screen"/>
 </launch>

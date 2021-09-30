@@ -28,13 +28,15 @@ class QuadMap_Node:
         topic = rospy.get_param("pcl_topic", default="pcl_plane")
         max_depth = rospy.get_param("max_depth", default=16)
         scale = rospy.get_param("qt_scale", default=70)
+        self.experiment = rospy.get_param("experiment", default="default-exp")
+        low = rospy.get_param("low", default=-40)
 
         self.img_width = rospy.get_param("out_width", default=256)
         self.img_height = rospy.get_param("out_height", default=192)
         
         # initialise the tree
         # TODO: set these bounds accordingly 
-        self.tree = qt.Quadtree(low=(-20, -20), scale=scale, max_depth=max_depth)
+        self.tree = qt.Quadtree(low=low, scale=scale, max_depth=max_depth)
         
         # advertising a service
         # self.serv = rospy.Service('getMap', getMap, self.getMap)
@@ -149,7 +151,7 @@ class QuadMap_Node:
         now = datetime.now()
         d = now.strftime("%y-%m-%d_%H-%M")
         outputdir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'output'))
-        f = "qt_{}_10.pkl".format(d)
+        f = "{}_{}-qt-{}-{}-{}.pkl".format(self.experiment, d, self.tree.max_depth, self.tree.low, self.tree.scale)
         fnam = os.path.join(outputdir, f)
         self.tree.save(fnam)
         rospy.logwarn("Saved quadtree to: {}".format(fnam))
