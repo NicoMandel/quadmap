@@ -41,7 +41,7 @@ class Box:
 class QuadtreeElement:
 
     @classmethod
-    def instantiate(cls, prior = [0.5, 0.5], sensor_model=[[0.7, 0.3], [0.3, 0.7]]):
+    def instantiate(cls, prior = [0.5, 0.5], sensor_model=[[0.7, 0.3], [0.3, 0.7]], clamp=6):
         """
             Method to instantiate class variables to be used for updating the tree. 
             Has to be called before inserting the first element
@@ -53,6 +53,19 @@ class QuadtreeElement:
         cls.sensor_model = np.log( sensor_model / (1. - sensor_model))
         cls.init_prior = np.log(( prior / (1. - prior)))
 
+        # clamping values - are an index        
+        cls.clamp = cls.initclamp(clamp)
+
+    @classmethod
+    def initclamp(cls, clamp):
+        p = cls.init_prior
+        for _ in range(clamp):
+            model = cls.sensor_model
+            obs = np.squeeze(model[:, 1])
+            init_pr = cls.init_prior
+            p = p + obs - init_pr
+        return p
+
     def __init__(self, index, val=None) -> None:
         """
             Initialisation of an empty Node - empty, because val == None - used for checks
@@ -61,29 +74,35 @@ class QuadtreeElement:
         self.val = val
         # self.val = val
 
-    def update_with_prior(self, value, pr) -> None:
+    def update(self, value, pr = None) -> None:
         """
-            Using the log update rule on the sensor model
-        """
-        model = type(self).sensor_model
-        # getting the observation out
-        obs = np.squeeze(model[:, value])
-        init_pr = type(self).init_prior
-        nval = pr + obs - init_pr
-        self.val = nval
-
-    def update(self, value) -> None:
-        """
-            Using the log update rule. Does not require a prior.
+            Using the log update rule. Does not require a prior. If a prior is given, this will be used to update the value
             Used with the normal quadtree insertion
         """
-        model = type(self).sensor_model
-        # Getting the observation out
-        obs = np.squeeze(model[:,value])
-        init_pr = type(self).init_prior
-        pr = self.val
-        nval = pr + obs - init_pr
+        if pr is None:
+            pr = self.val
+        nval = self.updateVal(value, pr)
         self.val = nval
+
+    @classmethod
+    def updateVal(cls, val, pr):
+        """
+            Class method to just calculate the updated value
+        """
+        model = cls.sensor_model
+        obs = np.squeeze(model[:, val])
+        init_pr = cls.init_prior
+        nval = pr + obs - init_pr
+        nval = cls.clamping(nval)
+        return nval
+
+    @classmethod
+    def clamping(cls, val):
+        """
+            Following the definition from the Octomaps paper
+        """
+        return np.clip(val, cls.clamp[0], cls.clamp[1])
+
 
     def insertNew(self, val) -> None:
         """
@@ -111,17 +130,6 @@ class QuadtreeElement:
             Method to override the index, not the value
         """
         self.index = idx
-
-    @classmethod
-    def updateVal(cls, val, pr):
-        """
-            Class method to just calculate the updated value
-        """
-        model = cls.sensor_model
-        obs = np.squeeze(model[:, val])
-        init_pr = cls.init_prior
-        nval = pr + obs - init_pr
-        return nval
 
 
     def getprobabilities(self):
@@ -290,7 +298,7 @@ class Quadtree:
         """
         prior = self.getPrior(idx)
         if idx in self.dictionary:
-            self.dictionary[idx].update_with_prior(val, pr=prior)           
+            self.dictionary[idx].update(val, pr=prior)           
         else:
             nval = QuadtreeElement.updateVal(val, prior)
             self.dictionary[idx] = QuadtreeElement(idx, nval)
@@ -571,7 +579,7 @@ class Quadtree:
         for k, v in self.getallboxes().items():
             lo, w, h = v.matplotlib_format()
             # alpha = 0 if self[k].val is None else self[k].getMaxProbability()
-            r = Rectangle(lo, w, h, facecolor='blue' if self[k].getMaxVal() == 1 else 'none', edgecolor='red', lw=.5 ) # , alpha=alpha)
+            r = Rectangle(lo, w, h, facecolor='blue' if self[k].getMaxVal() == 1 else 'none', edgecolor='black', lw=.2 ) # , alpha=alpha)
             ax.add_patch(r)
         ax.set_xlim(self.low[0], self.low[0] + self.scale)
         ax.set_ylim(self.low[1], self.low[1] + self.scale)
