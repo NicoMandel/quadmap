@@ -7,7 +7,10 @@
   <arg name="world" default="serf"/>
   <!-- Values for the camera calibration file -->
   <arg name="pcl" default="false"/>
+  <arg name="delay" default="10"/>
+  <arg name="respawn" default="true"/>
   <arg name="cnn" default="false"/>
+  <arg name="rosbag" default="false"/>
   <arg unless="$(arg cnn)" name="out_width" default="256"/> <!-- 1920 / 256 / 128 --> 
   <arg unless="$(arg cnn)" name="out_height" default="192"/> <!-- 1080 / 192 / 96 -->
   <arg if="$(arg cnn)" name="out_width" default="128"/> <!-- 1920 / 256 / 128 --> 
@@ -44,6 +47,8 @@
   <!-- camera HITL - a lot of hardcoded things in there -->
   <node pkg="desiccation_cnn" type="oakD_hitl.py" name="oakD_hitl" output="screen" respawn="false" respawn_delay="0"/>
 
+  <!-- Set the HITL parameter if we have pcl:=true - to call the delay in the cpp file -->
+  <param if="$(arg pcl)" name="delay" type="int" value="$(arg delay)"/>
   <!-- The pcl file - uses cascaded calibration file -->
   <include if="$(arg pcl)" file="$(find learning_image_geometry)/launch/pcl.launch">
     <arg name="camera_name" value="$(arg camera_name)"/>
@@ -55,6 +60,7 @@
     <arg name="world_frame" value="$(arg world_frame)"/>
     <arg name="info_topic" value="$(arg info_topic)"/>
     <arg name="image_topic" value="$(arg image_topic)"/>
+    <arg name="respawn" value="$(arg respawn)"/>
   </include>
   
   <!-- RVIZ -->
@@ -69,4 +75,6 @@
   <param name="low" type="int" value="$(arg low)"/>
   <node if="$(arg quadmap)" pkg="quadmap" type="quadtree_node.py" name="quadtree_node" output="screen"/>
 
+  <!-- Rosbag Record -->
+  <!-- TODO: Continue here -->
 </launch>
