@@ -4,7 +4,6 @@
 <launch>
   <!-- <arg name="debug" default="true"/> -->
   <!-- Simulation arguments -->
-  <arg name="simulation" default="false"/>
   <arg name="world" default="serf"/>
   <!-- Values for the camera calibration file -->
   <arg name="pcl" default="false"/>
@@ -56,7 +55,6 @@
     <arg name="world_frame" value="$(arg world_frame)"/>
     <arg name="info_topic" value="$(arg info_topic)"/>
     <arg name="image_topic" value="$(arg image_topic)"/>
-    <arg name="simulation" value="$(arg simulation)"/>
   </include>
   
   <!-- RVIZ -->
