@@ -24,11 +24,13 @@ if __name__=="__main__":
     outputdir = os.path.abspath(os.path.join(cwd, '..', 'output', 'sim'))
 
     tgt_f = os.path.join(cwd, tgt_fname)
-    base_launch = "python {} ".format(tgt_f)            # Full path
+    # base_launch = "python {} ".format(tgt_f)            # Full path
     for m in mode:
         # run first with default values
-        launchstring = base_launch + "--input {} --file {} --output {}".format(inputdir, m, outputdir)
+        # launchstring = base_launch + "--input {} --file {} --output {}".format(inputdir, m, outputdir)
+        launchlist = ["python", tgt_f, "--input", inputdir, "--file", m, "--output", outputdir]
         try:
-            subprocess.run(launchstring, shell=True)
+            print("Launching: {}".format(launchlist))
+            subprocess.Popen(launchlist)
         except Exception as e:
-            print("Simulation failed for: {}".format(launchstring))
+            print("Simulation failed for: {}: {}".format(launchlist, e))
