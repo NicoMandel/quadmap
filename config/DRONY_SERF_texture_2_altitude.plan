@@ -52,8 +52,8 @@
                 "type": "SimpleItem"
             },
             {
-                "AMSLAltAboveTerrain": 5,
-                "Altitude": 5,
+                "AMSLAltAboveTerrain": 25,
+                "Altitude": 25,
                 "AltitudeMode": 1,
                 "autoContinue": true,
                 "command": 19,
@@ -66,13 +66,13 @@
                     null,
                     -27.3892626,
                     152.8726719,
-                    5
+                    25
                 ],
                 "type": "SimpleItem"
             },
             {
-                "AMSLAltAboveTerrain": 10,
-                "Altitude": 10,
+                "AMSLAltAboveTerrain": 20,
+                "Altitude": 20,
                 "AltitudeMode": 1,
                 "autoContinue": true,
                 "command": 19,
@@ -85,7 +85,7 @@
                     null,
                     -27.3892626,
                     152.8726719,
-                    10
+                    20
                 ],
                 "type": "SimpleItem"
             },
@@ -109,8 +109,8 @@
                 "type": "SimpleItem"
             },
             {
-                "AMSLAltAboveTerrain": 20,
-                "Altitude": 20,
+                "AMSLAltAboveTerrain": 10,
+                "Altitude": 10,
                 "AltitudeMode": 1,
                 "autoContinue": true,
                 "command": 19,
@@ -123,13 +123,13 @@
                     null,
                     -27.3892626,
                     152.8726719,
-                    20
+                    10
                 ],
                 "type": "SimpleItem"
             },
             {
-                "AMSLAltAboveTerrain": 25,
-                "Altitude": 25,
+                "AMSLAltAboveTerrain": 5,
+                "Altitude": 5,
                 "AltitudeMode": 1,
                 "autoContinue": true,
                 "command": 19,
@@ -142,7 +142,7 @@
                     null,
                     -27.3892626,
                     152.8726719,
-                    25
+                    5
                 ],
                 "type": "SimpleItem"
             },

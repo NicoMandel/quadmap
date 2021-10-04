@@ -444,8 +444,8 @@ class Quadtree:
                 # if the boolean vector is still valid
                 if ct_vec[j]:
                     ds = self.getalldaughters(curr_box)
+                    pt_t = self.getPoint(pt)
                     for d in ds:
-                        pt_t = self.getPoint(pt)
                         if pt_t.insideBox(self.getBox(d)):
                             arr[j,i] = d
                             break
@@ -503,6 +503,8 @@ class Quadtree:
         if isinstance(pt, tuple):
             return Point(pt[0], pt[1])
         elif isinstance(pt, Point32):
+            return Point(pt.x, pt.y)
+        else:
             return Point(pt.x, pt.y)
 
     def getBox(self, idx):
