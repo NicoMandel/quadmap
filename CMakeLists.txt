@@ -12,7 +12,7 @@ find_package(catkin REQUIRED COMPONENTS
   desiccation_msgs
   learning_image_geometry
   std_msgs
-  message_generation
+  # message_generation
   # uas_gazebo_sim
   # uas_offboard_planner
 )
@@ -58,10 +58,10 @@ find_package(catkin REQUIRED COMPONENTS
 # )
 
 ## Generate services in the 'srv' folder
-add_service_files(
-  FILES
-  getMap.srv
-)
+# add_service_files(
+#   FILES
+#   getMap.srv
+# )
 
 ## Generate actions in the 'action' folder
 # add_action_files(
@@ -70,11 +70,11 @@ add_service_files(
 #   Action2.action
 # )
 
-## Generate added messages and services with any dependencies listed here
-generate_messages(
-  DEPENDENCIES
-  std_msgs
-)
+# ## Generate added messages and services with any dependencies listed here
+# generate_messages(
+#   DEPENDENCIES
+#   std_msgs
+# )
 
 ################################################
 ## Declare ROS dynamic reconfigure parameters ##
