@@ -7,3 +7,5 @@
 .env
 
 **/output/
+
+src/test_clamping.py

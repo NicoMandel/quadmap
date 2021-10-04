@@ -6,16 +6,15 @@ from datetime import datetime
 
 if __name__=="__main__":
     thisdir = os.path.dirname(__file__)
-    outputdir = os.path.abspath(os.path.join(thisdir, '..', 'output'))
 
-    a = datetime(2021, 10, 4, 10, 20)
+    a = datetime(2021, 10, 4, 16, 45)
     d = a.strftime("%y-%m-%d_%H-%M")
-    experiment = "sim_tgt2-descend.bag"
+    experiment = "sim_tgt1-descend"
     max_depth = 16
-    low = (-80,-80)
-    scale = 120
+    low = (-40,-40)
+    scale = 100
     
-    outputdir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'output'))
+    outputdir = os.path.abspath(os.path.join(thisdir, '..', 'output', 'sim'))
     f = "{}_{}-qt-{}-{}-{}.pkl".format(d, experiment, max_depth, low, scale)
     
     fname = os.path.join(outputdir,f)
