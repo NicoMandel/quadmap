@@ -675,13 +675,15 @@ class Quadtree:
         b_idcs = cls.getMaxBoxes(l-1)
         return (int(b_idcs), int(idcs))
 
-    def postprocess(self):
+    def postprocess(self, depth = 1):
         """
             Postprocessing function to prune the tree depending on inserted values
             May take really long.
         """
         # recurse through the levels
         for l in range(self.max_depth, 2, -1):
+            # added depth checker
+            if l < depth: break
             # Get the indices for that level
             idcs = self.getIndicesPerLevel(l)
             # Run through all of the keys
