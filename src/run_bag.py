@@ -8,27 +8,50 @@
 import subprocess
 import os
 import argparse
+from datetime import datetime
 
 def get_filenames(path):
     fs = os.listdir(path)
     base = [os.path.splitext(f)[0] for f in fs]
     return base
 
+def getscales(modename):
+    """
+        Function to get lowx and lowy and scale depending on the name of the experiment. FOr now: all the same:
+        lowx = -84
+        lowy = -30
+        scale = 250
+        from: exp_hyb_20
+    """
+    lowx = -84
+    lowy = -30
+    scale = 250
+    return lowx, lowy, scale
+
+
+    return lowx, lowy, scale
+
 if __name__=="__main__":
     cwd = os.path.abspath(os.path.dirname(__file__))
     tgt_fname = "bag-test.py"
 
     # Directory and file management
-    inputdir = os.path.abspath(os.path.expanduser("~/rosbag/sim"))
+    inputdir = os.path.abspath(os.path.expanduser("~/rosbag/pcl"))
     mode = get_filenames(inputdir)
     outputdir = os.path.abspath(os.path.join(cwd, '..', 'output', 'sim'))
+
+    a = datetime.now()
+    d = a.strftime("%y-%m-%d_%H-%M")
+    outdir = os.path.join(outputdir, d)
+    os.mkdir(outdir)
 
     tgt_f = os.path.join(cwd, tgt_fname)
     # base_launch = "python {} ".format(tgt_f)            # Full path
     for m in mode:
         # run first with default values
         # launchstring = base_launch + "--input {} --file {} --output {}".format(inputdir, m, outputdir)
-        launchlist = ["python", tgt_f, "--input", inputdir, "--file", m, "--output", outputdir]
+        lowx, lowy, scale = getscales(m)
+        launchlist = ["python", tgt_f, "--input", inputdir, "--file", m, "--output", outdir, "-lx", lowx, "-ly", lowy, "-sc", scale]
         try:
             print("Launching: {}".format(launchlist))
             subprocess.Popen(launchlist)
