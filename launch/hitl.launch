@@ -78,5 +78,5 @@
   <!-- Rosbag Record -->
   <!-- ! since we only ever need the pcl, we can just run the pcl recorder here -->
   <!-- ? what is the file size of the rosbag if we only record the pcl - ! roughly 1 GB with the PCL for the quick missions! -->
-  <node if="$(arg rosbag)" pkg="rosbag" type="record" name="recorder" args="record -o /home/nicolas/rosbag/sim/hitl /$(arg pcl_topic) /tf"/>
+  <node if="$(arg rosbag)" pkg="rosbag" type="record" name="recorder" args="record -o /home/nicolas/rosbag/pcl/hitl /$(arg pcl_topic) /tf"/>
 </launch>

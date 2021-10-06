@@ -24,6 +24,7 @@
   <arg name="low" default="-40"/>
   <arg name="qt" default="true"/>
   <arg name="rosbag" default="false"/>
+  <arg name="pcl" default="true"/>
   
   <!-- Argument for tf throttle -->
   <arg name="throttle" default="false"/>
@@ -64,6 +65,7 @@
     <arg name="info_topic" value="$(arg info_topic)"/>
     <arg name="image_topic" value="$(arg image_topic)"/>
     <arg name="simulation" value="$(arg simulation)"/>
+    <arg name="pcl" value="$(arg pcl)"/>
   </include>
   
   <!-- RVIZ -->
@@ -79,6 +81,6 @@
   <node if="$(arg qt)" pkg="quadmap" type="quadtree_node.py" name="quadtree_node" output="screen"/>
 
   <!-- Rosbag for recording the pcl plane -->
-  <node if="$(arg rosbag)" pkg="rosbag" type="record" name="recorder" args="record -o /home/nicolas/rosbag/sim/$(arg mode) /$(arg pcl_topic) /tf"/>
+  <node if="$(arg rosbag)" pkg="rosbag" type="record" name="recorder" args="record -o /home/nicolas/rosbag/pcl/$(arg mode) /$(arg pcl_topic) /tf"/>
 
 </launch>
