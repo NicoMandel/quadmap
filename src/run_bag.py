@@ -18,17 +18,15 @@ def get_filenames(path):
 def getscales(modename):
     """
         Function to get lowx and lowy and scale depending on the name of the experiment. FOr now: all the same:
-        lowx = -84
+        lowx = -90
         lowy = -30
         scale = 250
         from: exp_hyb_20
+        ! defaults thrown into the other file
     """
-    lowx = -84
+    lowx = -90
     lowy = -30
     scale = 250
-    return lowx, lowy, scale
-
-
     return lowx, lowy, scale
 
 if __name__=="__main__":
@@ -40,18 +38,20 @@ if __name__=="__main__":
     mode = get_filenames(inputdir)
     outputdir = os.path.abspath(os.path.join(cwd, '..', 'output', 'sim'))
 
-    a = datetime.now()
+    a = datetime(2021, 10, 6, 18, 00)
+    # d = a.strftime("%y-%m-%d_%H-%M")
+    # a = datetime.now()
     d = a.strftime("%y-%m-%d_%H-%M")
     outdir = os.path.join(outputdir, d)
-    os.mkdir(outdir)
+    # os.mkdir(outdir)
 
     tgt_f = os.path.join(cwd, tgt_fname)
     # base_launch = "python {} ".format(tgt_f)            # Full path
     for m in mode:
         # run first with default values
         # launchstring = base_launch + "--input {} --file {} --output {}".format(inputdir, m, outputdir)
-        lowx, lowy, scale = getscales(m)
-        launchlist = ["python", tgt_f, "--input", inputdir, "--file", m, "--output", outdir, "-lx", lowx, "-ly", lowy, "-sc", scale]
+        # lowx, lowy, scale = getscales(m)
+        launchlist = ["python", tgt_f, "--input", inputdir, "--file", m, "--output", outdir, "-r"] #, "-lx" , lowx, "-ly", lowy, "-sc", scale]
         try:
             print("Launching: {}".format(launchlist))
             subprocess.Popen(launchlist)

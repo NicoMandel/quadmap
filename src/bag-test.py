@@ -35,7 +35,7 @@ def parse_args(defaultdir):
     parser.add_argument("--input", help="Input directory. If not specified, will raise FileNotFoundError", type=str)
     parser.add_argument("--output", help="Output directory. Default is ../output", default=defaultdir, type=str)
     parser.add_argument("--file", help="Input Filename. Used to read input from input directory and create equivalent output", type=str)
-
+    parser.add_argument("-r", "--rate", default=False, action="store_true", help="If parameter rate is set, the frequency will be limited to roughly 8 hz - ergo some PCLs will be dropped")
     args = parser.parse_args()
     return args
 
@@ -53,6 +53,16 @@ def find_dimensions(directory, experiment):
     return min_x, min_y, scale
 
 
+def getskiprate(fname):
+    """
+        Returns the image which is to be processed.
+        *  Experiments ran at 24 Hz, so 3 will decrease to 8 Hz
+        *  Simulations ran at 32 Hz, so 4 will decrease to 8 Hz
+    """
+    if "exp" in fname:
+        return 3
+    else:
+        return 4
 
 if __name__=="__main__":
     dirname = os.path.dirname(os.path.abspath(__file__))
@@ -71,10 +81,16 @@ if __name__=="__main__":
     low = (lowx, lowy)
 
     tree = qt.Quadtree(low=low, scale=scale, max_depth=max_depth)
-
-    print("Starting Quadtree simulation for {} with parameters: low {}, scale {}, depth {}".format(
+    status_statement = "Starting Quadtree simulation for {} with parameters: low {}, scale {}, depth {}".format(
         args.file, low, scale, max_depth
-    ))
+    )
+
+    # Rate delimiting setup
+    if args.rate:
+        rate = getskiprate(args.file)
+        status_statement += " only processing every {} pcl".format(rate)
+    print(status_statement)
+
     # symlinked - may have to use "realpath" or something
     bagf = os.path.expanduser(os.path.join(args.input, args.file + ".bag"))
 
@@ -83,16 +99,18 @@ if __name__=="__main__":
     pcl_topic = "/pcl_plane"
     ctr = 0
 
-    # timing setup
-    timerlist = []
-    hz = 30
     
+    ctr = 0 
     try:
         with rosbag.Bag(bagf, 'r') as bag:
             duration = bag.get_end_time() - bag.get_start_time()
 
             for (topic, msg, ts) in tqdm(bag.read_messages(topics=pcl_topic), desc='progress', total=bag.get_message_count(topic_filters=pcl_topic)):
-
+                ctr += 1
+                if args.rate:
+                    # only process every X-th image.
+                    if ctr % rate != 0:
+                        continue
                 # Decoding the points
                 intensity_channel = msg.channels[1].values
                 pts = msg.points
