@@ -41,7 +41,7 @@ def parse_args(defaultdir):
 
 def find_dimensions(directory, experiment):
 
-    fname = os.path.join(directory, experiment+".csv")
+    fname = os.path.expanduser(os.path.join(directory, experiment+".csv"))
     df = pd.read_csv(fname)
     min_x = df.at[0,"min_x"]
     min_y = df.at[0, "min_y"]
