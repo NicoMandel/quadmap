@@ -38,6 +38,7 @@ def parse_args(defaultdir):
     parser.add_argument("--output", help="Output directory. Default is ../output", default=defaultdir, type=str)
     parser.add_argument("--file", help="Input Filename. Used to read input from input directory and create equivalent output", type=str)
     parser.add_argument("-r", "--rate", default=False, action="store_true", help="If parameter rate is set, the frequency will be limited to roughly 8 hz - ergo some PCLs will be dropped")
+    parser.add_argument("-cr", "--comparison", default=2, help="The x-th value, which gets inserted into the second tree. By modulo operation", type=int)
     args = parser.parse_args()
     return args
 
@@ -49,10 +50,10 @@ def find_dimensions(directory, experiment):
     min_y = df.at[0, "min_y"]
     max_x = df.at[0, "max_x"]
     max_y = df.at[0, "max_y"]
-    x_scale = max_x - min_x
-    y_scale = max_y - min_y
-    scale = max(x_scale, y_scale)
-    return min_x, min_y, scale
+    x_scale = max_x - min_x - 1.
+    y_scale = max_y - min_y - 1.
+    scale = max(x_scale, y_scale) + 1
+    return int(min_x), int(min_y), int(scale)
 
 
 def getskiprate(fname):
@@ -82,9 +83,13 @@ if __name__=="__main__":
     lowx, lowy, scale = find_dimensions(args.input, args.file)
     low = (lowx, lowy)
 
-    tree = qt.Quadtree(low=low, scale=scale, max_depth=max_depth)
-    status_statement = "Starting Quadtree simulation for {} with parameters: low {}, scale {}, depth {}".format(
-        args.file, low, scale, max_depth
+    # comparison value
+    compar = args.comparison
+
+    tree_1 = qt.Quadtree(low=low, scale=scale, max_depth=max_depth)
+    tree_2 = qt.Quadtree(low=low, scale=scale, max_depth=max_depth)
+    status_statement = "Starting Dual simulation for {} with parameters: low {}, scale {}, depth {}. Putting every {} observation into the second tree".format(
+        args.file, low, scale, max_depth, compar
     )
 
     # Rate delimiting setup
@@ -96,7 +101,6 @@ if __name__=="__main__":
     # symlinked - may have to use "realpath" or something
     bagf = os.path.expanduser(os.path.join(args.input, args.file + ".bag"))
 
-   
     # rosbag setup
     pcl_topic = "/pcl_plane"
     ctr = 0
@@ -119,13 +123,21 @@ if __name__=="__main__":
                 val_dict = decode_intensity(pts, intensity_channel)
                 
                 # Inserting the points
-                idcs = tree.insertion_idcs(pts, img_width, img_height)
-                tree.insert_points_arr(values=val_dict.values(), idcs = idcs)
+                if ctr % compar == 0:
+                    idcs = tree_2.insertion_idcs(pts, img_width, img_height)
+                    tree_2.insert_points_arr(values=val_dict.values(), idcs = idcs)
+                else:
+                    idcs = tree_1.insertion_idcs(pts, img_width, img_height)
+                    tree_1.insert_points_arr(values=val_dict.values(), idcs = idcs)
 
         # output saving
-        a = datetime.now()
-        d = a.strftime("%y-%m-%d_%H-%M")
-        f = "{}_{}-qt-{}-{:.1f}-{}.pkl".format(d, args.file, max_depth, low, scale)
-        outpath = os.path.expanduser(os.path.join(args.output, f))
-        tree.save(outpath)
+        # a = datetime.now()
+        # d = a.strftime("%y-%m-%d_%H-%M")
+        f1 = "{}-qt{}-{}-{}-{}.pkl".format(args.file, 1, max_depth, low, scale)
+        f2 = "{}-qt{}-{}-{}-{}.pkl".format(args.file, 2, max_depth, low, scale)
+        outpath1 = os.path.expanduser(os.path.join(args.output, f1))
+        outpath2 = os.path.expanduser(os.path.join(args.output, f2))
+        msg = tree_1.save(outpath1)
+        tree_2.save(outpath2)
+        print(msg)
     except FileNotFoundError: raise

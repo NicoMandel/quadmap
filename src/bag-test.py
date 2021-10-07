@@ -47,10 +47,10 @@ def find_dimensions(directory, experiment):
     min_y = df.at[0, "min_y"]
     max_x = df.at[0, "max_x"]
     max_y = df.at[0, "max_y"]
-    x_scale = max_x - min_x
-    y_scale = max_y - min_y
-    scale = max(x_scale, y_scale)
-    return min_x, min_y, scale
+    x_scale = max_x - min_x -1.
+    y_scale = max_y - min_y - 1.
+    scale = max(x_scale, y_scale) + 1.
+    return int(min_x), int(min_y), int(scale)
 
 
 def getskiprate(fname):
@@ -94,7 +94,6 @@ if __name__=="__main__":
     # symlinked - may have to use "realpath" or something
     bagf = os.path.expanduser(os.path.join(args.input, args.file + ".bag"))
 
-   
     # rosbag setup
     pcl_topic = "/pcl_plane"
     ctr = 0
@@ -125,5 +124,6 @@ if __name__=="__main__":
         d = a.strftime("%y-%m-%d_%H-%M")
         f = "{}_{}-qt-{}-{}-{}.pkl".format(d, args.file, max_depth, low, scale)
         outpath = os.path.expanduser(os.path.join(args.output, f))
-        tree.save(outpath)
+        msg = tree.save(outpath)
+        print(msg)
     except FileNotFoundError: raise
