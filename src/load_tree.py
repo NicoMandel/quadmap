@@ -39,14 +39,14 @@ def resolvename(f):
 def plotexperiment(directory, experiment_name, plot_title, depth=10):
     fname = os.path.join(directory,experiment_name)
     tree = qt.Quadtree.load(fname)
-    print("Loading done. Proceeding with pruning")
+    print("Loading of {} done. Proceeding with pruning".format(experiment_name))
     tree.postprocess(depth=depth)
 
     print("Pruning done, Proceeding with Plotting")
 
     fig = plt.figure(figsize=(15,9))
     ax = fig.gca()
-    tree.plot_tree(ax)
+    tree.plot_tree(ax, depth=depth)
     ax.set_title("{}: {}".format(plot_title, depth))
 
     plt.show()
@@ -57,20 +57,25 @@ if __name__=="__main__":
     a = datetime(2021, 10, 6, 18, 0)
     outdir_time = a.strftime("%y-%m-%d_%H-%M")
     # b = datetime(2021, 10, 7, 5, 32).strftime("%y-%m-%d_%H-%M")
-    exx = "exp"
-    mode="hyb-freq"
-    setting = "20m"
+    c = datetime(2021, 10, 7)
+    cform = c.strftime("%y-%m-%d")
+    exx = "sim"
+    mode="hyb"
+    setting = "20"
     experiment = "{}_{}-{}".format(exx, mode, setting)
     
     max_depth = 16
     low = (-90,-30)
     scale = 250
     
-    outputdir = os.path.abspath(os.path.join(thisdir, '..', 'output', 'sim', outdir_time))
+    outputdir = os.path.abspath(os.path.join(thisdir, '..', 'output', cform))
 
     # f = "{}_{}-qt-{}-{}-{}.pkl".format(b, experiment, max_depth, low, scale)
     f = findexp(experiment, outputdir)
     plotexperiment(outputdir, f, experiment, depth=10)
-    # plotdir(outputdir)
+    # c = datetime(2021, 10, 7)
+    # cform = c.strftime("%y-%m-%d")
+    # dirtoplot = os.path.abspath(os.path.join(thisdir, '..', 'output', cform))
+    # plotdir(dirtoplot)
     
     print("Plotting done")

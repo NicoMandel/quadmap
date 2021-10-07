@@ -577,30 +577,47 @@ class Quadtree:
             bdict[k] = self.getBox(k)
         return bdict
 
-    def plot_tree(self, ax):
-        for k, v in self.getallboxes().items():
-            lo, w, h = v.matplotlib_format()
-            val = self[k].getMaxVal()
-            # Set the alpha according to the probability - high alpha = not transparent. low alpha = transparent. Low probability of class = transparent
-            probs =  self[k].getprobabilities()
-            alpha = probs[1]
-            # set a color triplet. If the area is unexplored:
-            if np.all(probs == probs[0]):
-                # if unexplored
-                color = 'none'
-                alpha = 0.001
-            elif val == 1:
-                # if class == 1
-                color = 'red'
-            else:
-                # if not class
-                color = 'gray'
-            r = Rectangle(lo, w, h, facecolor=color, edgecolor='black', lw=.2 , alpha=alpha)
-            ax.add_patch(r)
+    def plot_tree(self, ax, depth=1):
+        for l in range(self.max_depth, 2, -1):
+            # added depth checker
+            if l < depth: break
+            # Get the indices for that level
+            idcs = self.getIndicesPerLevel(l)
+            # Run through all of the keys
+            orig_keys = list(self.dictionary.keys())
+            for k in orig_keys:
+                if (k > idcs[0]) and (k < idcs[1]):
+                    if k in self.dictionary:
+                        # if the key exists -  plot it.
+                        v = self.getBox(k)
+                        lo, w, h = v.matplotlib_format()
+                        val = self[k].getMaxVal()
+                        # Set the alpha according to the probability - high alpha = not transparent. low alpha = transparent. Low probability of class = transparent
+                        probs =  self[k].getprobabilities()
+                        alpha = probs[1]
+                        # set a color triplet. If the area is unexplored:
+                        if np.all(probs == probs[0]):
+                            # if unexplored
+                            color = 'none'
+                            alpha = 0.001
+                        elif val == 1:
+                            # if class == 1
+                            color = 'red'
+                        else:
+                            # if not class
+                            color = 'gray'
+                        r = Rectangle(lo, w, h, facecolor=color, edgecolor='black', lw=.2 , alpha=alpha)
+                        ax.add_patch(r)
+
+                        # and remove all the mothers from the dictionary
+                        ch = self.getMotherChain(k)
+                        for m in ch.values():
+                            if m in self.dictionary:
+                                del self.dictionary[m] 
         ax.set_xlim(self.low[0], self.low[0] + self.scale)
         ax.set_ylim(self.low[1], self.low[1] + self.scale)
     
-    def getMotherChain(self, idx):
+    def getMotherChain(self, idx) -> dict:
         idcs = {}
         while(idx >1):
             midx = self.getmother_idx(idx)
