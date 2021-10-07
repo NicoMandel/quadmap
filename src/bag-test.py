@@ -5,10 +5,12 @@
     https://www.programcreek.com/python/?code=uzh-rpg%2Frpg_trajectory_evaluation%2Frpg_trajectory_evaluation-master%2Fscripts%2Fdataset_tools%2Fbag_to_pose.py
 """
 
+from os import defpath
 import os.path
 import rosbag
 from datetime import datetime
 from tqdm import tqdm
+import pandas as pd
 
 import quadtree as qt
 
@@ -28,9 +30,6 @@ def parse_args(defaultdir):
         Function to parse the arguments 
     """
     parser = ArgumentParser(description="Stepping through a pcl bag file to insert into a quadmap to save it.")
-    parser.add_argument("-lx", "--lowx", default=-40, help="lowest x value encountered in the pointcloud. Default is -40", type=int)
-    parser.add_argument("-ly", "--lowy", default=-40, help="lowest y value encountered in the pointcloud. Default is -40", type=int)
-    parser.add_argument("-sc", "--scale", default=100, help="scale of the Quadtree. Map extent will be low + scale. Default is 100", type=int)
     parser.add_argument("--width", default=128, help="Image width. Default is 128. Change depending on network resolution", type=int)
     parser.add_argument("--height", default=96, help="Image Height. default is 96. Change depending on network resolution", type=int)
     parser.add_argument("-d", "--depth", default=16, help="depth of the quadtree. Default is 16.", type=int)
@@ -40,6 +39,20 @@ def parse_args(defaultdir):
 
     args = parser.parse_args()
     return args
+
+def find_dimensions(directory, experiment):
+
+    fname = os.path.join(directory, experiment+".csv")
+    df = pd.read_csv(fname)
+    min_x = df.at[0,"min_x"]
+    min_y = df.at[0, "min_y"]
+    max_x = df.at[0, "max_x"]
+    max_y = df.at[0, "max_y"]
+    x_scale = max_x - min_x
+    y_scale = max_y - min_y
+    scale = max(x_scale, y_scale)
+    return min_x, min_y, scale
+
 
 
 if __name__=="__main__":
@@ -52,15 +65,21 @@ if __name__=="__main__":
     # Quadtree values
     img_width = args.width
     img_height = args.height
-    low = (args.lowx, args.lowy)
-    scale =  args.scale
     max_depth = args.depth
+
+    # Getting the right dimensions
+    lowx, lowy, scale = find_dimensions(args.input, args.file)
+    low = (lowx, lowy)
 
     tree = qt.Quadtree(low=low, scale=scale, max_depth=max_depth)
 
+    print("Starting Quadtree simulation for {} with parameters: low {}, scale {}, depth {}".format(
+        args.file, low, scale, max_depth
+    ))
     # symlinked - may have to use "realpath" or something
     bagf = os.path.join(args.input, args.file + ".bag")
 
+   
     # rosbag setup
     pcl_topic = "/pcl_plane"
     ctr = 0
