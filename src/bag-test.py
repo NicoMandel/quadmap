@@ -5,7 +5,6 @@
     https://www.programcreek.com/python/?code=uzh-rpg%2Frpg_trajectory_evaluation%2Frpg_trajectory_evaluation-master%2Fscripts%2Fdataset_tools%2Fbag_to_pose.py
 """
 
-from os import defpath
 import os.path
 import rosbag
 from datetime import datetime
@@ -77,7 +76,7 @@ if __name__=="__main__":
         args.file, low, scale, max_depth
     ))
     # symlinked - may have to use "realpath" or something
-    bagf = os.path.join(args.input, args.file + ".bag")
+    bagf = os.path.expanduser(os.path.join(args.input, args.file + ".bag"))
 
    
     # rosbag setup
@@ -107,6 +106,6 @@ if __name__=="__main__":
         a = datetime.now()
         d = a.strftime("%y-%m-%d_%H-%M")
         f = "{}_{}-qt-{}-{}-{}.pkl".format(d, args.file, max_depth, low, scale)
-        outpath = os.path.join(args.output, f)
+        outpath = os.path.expanduser(os.path.join(args.output, f))
         tree.save(outpath)
     except FileNotFoundError: raise
