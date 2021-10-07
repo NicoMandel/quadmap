@@ -32,7 +32,7 @@ def resolvename(f):
     exp = "_".join(date_exp)
     return exp
 
-def plotexperiment(directory, experiment_name, depth=14):
+def plotexperiment(directory, experiment_name, depth=10):
     fname = os.path.join(directory,experiment_name)
     tree = qt.Quadtree.load(fname)
     n = resolvename(experiment_name)

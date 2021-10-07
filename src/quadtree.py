@@ -580,8 +580,11 @@ class Quadtree:
     def plot_tree(self, ax):
         for k, v in self.getallboxes().items():
             lo, w, h = v.matplotlib_format()
-            # alpha = 0 if self[k].val is None else self[k].getMaxProbability()
-            r = Rectangle(lo, w, h, facecolor='blue' if self[k].getMaxVal() == 1 else 'none', edgecolor='black', lw=.2 ) # , alpha=alpha)
+            val = self[k].getMaxVal()
+            # Set the alpha according to the probability - high alpha = not transparent. low alpha = transparent. Low probability of class = transparent
+            alpha =  self[k].getprobabilities()[1]
+
+            r = Rectangle(lo, w, h, facecolor='blue' if val == 1 else 'green', edgecolor='black', lw=.2 , alpha=alpha)
             ax.add_patch(r)
         ax.set_xlim(self.low[0], self.low[0] + self.scale)
         ax.set_ylim(self.low[1], self.low[1] + self.scale)
