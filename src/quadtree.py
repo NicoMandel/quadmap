@@ -582,9 +582,20 @@ class Quadtree:
             lo, w, h = v.matplotlib_format()
             val = self[k].getMaxVal()
             # Set the alpha according to the probability - high alpha = not transparent. low alpha = transparent. Low probability of class = transparent
-            alpha =  self[k].getprobabilities()[1]
-
-            r = Rectangle(lo, w, h, facecolor='blue' if val == 1 else 'green', edgecolor='black', lw=.2 , alpha=alpha)
+            probs =  self[k].getprobabilities()
+            alpha = probs[1]
+            # set a color triplet. If the area is unexplored:
+            if np.all(probs == probs[0]):
+                # if unexplored
+                color = 'none'
+                alpha = 0.001
+            elif val == 1:
+                # if class == 1
+                color = 'red'
+            else:
+                # if not class
+                color = 'gray'
+            r = Rectangle(lo, w, h, facecolor=color, edgecolor='black', lw=.2 , alpha=alpha)
             ax.add_patch(r)
         ax.set_xlim(self.low[0], self.low[0] + self.scale)
         ax.set_ylim(self.low[1], self.low[1] + self.scale)
