@@ -133,8 +133,8 @@ if __name__=="__main__":
         # output saving
         # a = datetime.now()
         # d = a.strftime("%y-%m-%d_%H-%M")
-        f1 = "{}-qt{}-{}-{}-{}.pkl".format(args.file, 1, max_depth, low, scale)
-        f2 = "{}-qt{}-{}-{}-{}.pkl".format(args.file, 2, max_depth, low, scale)
+        f1 = "{}-qt{}-{}-{}-{}-{}.pkl".format(args.file, 1, compar, max_depth, low, scale)
+        f2 = "{}-qt{}-{}-{}-{}-{}.pkl".format(args.file, 2, compar, max_depth, low, scale)
         outpath1 = os.path.expanduser(os.path.join(args.output, f1))
         outpath2 = os.path.expanduser(os.path.join(args.output, f2))
         msg = tree_1.save(outpath1)
