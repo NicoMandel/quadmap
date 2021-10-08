@@ -36,7 +36,7 @@ def resolvename(f):
     exp = "_".join(date_exp)
     return exp
 
-def plotexperiment(directory, experiment_name, plot_title, depth=10):
+def plotexperiment(directory, experiment_name, plot_title, depth=4):
     fname = os.path.join(directory,experiment_name)
     tree = qt.Quadtree.load(fname)
     print("Loading of {} done. Proceeding with pruning".format(experiment_name))
@@ -72,7 +72,7 @@ if __name__=="__main__":
 
     # f = "{}_{}-qt-{}-{}-{}.pkl".format(b, experiment, max_depth, low, scale)
     f = findexp(experiment, outputdir)
-    plotexperiment(outputdir, f, experiment, depth=10)
+    plotexperiment(outputdir, f, experiment, depth=1)
     # c = datetime(2021, 10, 7)
     # cform = c.strftime("%y-%m-%d")
     # dirtoplot = os.path.abspath(os.path.join(thisdir, '..', 'output', cform))

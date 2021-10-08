@@ -35,7 +35,7 @@ def parse_args(defaultdir):
     parser.add_argument("--input", help="Input directory. If not specified, will raise FileNotFoundError", type=str)
     parser.add_argument("--output", help="Output directory. Default is ../output", default=defaultdir, type=str)
     parser.add_argument("--file", help="Input Filename. Used to read input from input directory and create equivalent output", type=str)
-    parser.add_argument("-r", "--rate", default=False, action="store_true", help="If parameter rate is set, the frequency will be limited to roughly 8 hz - ergo some PCLs will be dropped")
+    parser.add_argument("-r", "--rate", default=8, type=int, help="The rate, at which values should be inserted into the Quadtree. Will use integer divide for this")
     args = parser.parse_args()
     return args
 
@@ -53,16 +53,19 @@ def find_dimensions(directory, experiment):
     return int(min_x), int(min_y), int(scale)
 
 
-def getskiprate(fname):
+def getskiprate(fname, r):
     """
-        Returns the image which is to be processed.
-        *  Experiments ran at 24 Hz, so 3 will decrease to 8 Hz
-        *  Simulations ran at 32 Hz, so 4 will decrease to 8 Hz
+        Returns the modulo which to divide by
+        *  Experiments ran at ~ 24 Hz, so 3 will decrease to 8 Hz
+        *  Simulations ran at ~ 32 Hz, so 4 will decrease to 8 Hz
     """
+
     if "exp" in fname:
-        return 3
+        orig_rate= 24
     else:
-        return 4
+        orig_rate= 32
+    skiprate = orig_rate / r
+    return int(skiprate)
 
 if __name__=="__main__":
     dirname = os.path.dirname(os.path.abspath(__file__))
@@ -86,9 +89,8 @@ if __name__=="__main__":
     )
 
     # Rate delimiting setup
-    if args.rate:
-        rate = getskiprate(args.file)
-        status_statement += " only processing every {} pcl".format(rate)
+    rate = getskiprate(args.file, args.rate)
+    status_statement += " only processing every {} pcl.".format(rate)
     print(status_statement)
 
     # symlinked - may have to use "realpath" or something
@@ -98,32 +100,28 @@ if __name__=="__main__":
     pcl_topic = "/pcl_plane"
     ctr = 0
 
-    
-    ctr = 0 
     try:
         with rosbag.Bag(bagf, 'r') as bag:
             duration = bag.get_end_time() - bag.get_start_time()
 
-            for (topic, msg, ts) in tqdm(bag.read_messages(topics=pcl_topic), desc='progress', total=bag.get_message_count(topic_filters=pcl_topic)):
+            for (topic, msg, ts) in tqdm(bag.read_messages(topics=pcl_topic), desc='progress', total=int(bag.get_message_count(topic_filters=pcl_topic) / rate)):
                 ctr += 1
-                if args.rate:
-                    # only process every X-th image.
-                    if ctr % rate != 0:
-                        continue
-                # Decoding the points
-                intensity_channel = msg.channels[1].values
-                pts = msg.points
-                val_dict = decode_intensity(pts, intensity_channel)
-                
-                # Inserting the points
-                idcs = tree.insertion_idcs(pts, img_width, img_height)
-                tree.insert_points_arr(values=val_dict.values(), idcs = idcs)
-
+                # only process every X-th image.
+                if ctr % rate == 0:                    
+                    # Decoding the points
+                    intensity_channel = msg.channels[1].values
+                    pts = msg.points
+                    val_dict = decode_intensity(pts, intensity_channel)
+                    
+                    # Inserting the points
+                    idcs = tree.insertion_idcs(pts, img_width, img_height)
+                    tree.insert_points_arr(values=val_dict.values(), idcs = idcs)
+    except FileNotFoundError: raise
+    
+    try:
         # output saving
-        a = datetime.now()
-        d = a.strftime("%y-%m-%d_%H-%M")
-        f = "{}_{}-qt-{}-{}-{}.pkl".format(d, args.file, max_depth, low, scale)
+        f = "{}-qt-{}-{}-{}-{}.pkl".format(args.file, rate, max_depth, low, scale)
         outpath = os.path.expanduser(os.path.join(args.output, f))
         msg = tree.save(outpath)
         print(msg)
-    except FileNotFoundError: raise
+    except FileExistsError: raise

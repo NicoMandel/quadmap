@@ -1,7 +1,7 @@
 #!/bin/bash -l
 
 # These are the limits for the hpc script
-memory_limit="5000mb"
+memory_limit="6000mb"
 time_limit="18:00:00"
 header_1="#!/bin/bash -l"
 header_2="#PBS -l walltime=${time_limit}"
@@ -12,14 +12,14 @@ header_4="#PBS -l ncpus=1"
 # conda and directory
 body_1="conda activate robostackenv"
 body_2="cd ~/quadmap/src"
-py_file="dual-tree.py"
+py_file="bag-test.py"
 
 # General stuff for the script
 # declare -a StringArray=("sim_hyb-10" "sim_hyb-20")
 search_dir=~/rosbag/pcl
 for m in "$search_dir"/*.bag 
 do
-	for i in {2..8}
+	for i in {1..8}
 	do
 		fname=$(basename "$m" .bag)
 		this_script_file="run_sim_${fname}.sh"
@@ -35,7 +35,7 @@ do
 		echo ${body_2} >> ${this_script_file}
 		
 		# Actual command to execute
-		commandstring="python ${py_file} --file ${fname} --output ../output/21-10-08 --input ~/rosbag/pcl -r -cr ${i}"
+		commandstring="python ${py_file} --file ${fname} --output ../output/skips --input ~/rosbag/pcl -r ${i}"
 
 		echo ${commandstring} >> ${this_script_file}
 		echo "running: ${commandstring}"
