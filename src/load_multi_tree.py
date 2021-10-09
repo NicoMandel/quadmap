@@ -74,7 +74,7 @@ def plot_kl_dict(kl_dict, ax, title, depth):
     ax.set_ylabel("KL - Div")
     ax.set_xticks(xy[:,0])
     # ax.scatter(x, y, 'x')
-    ax.set_title("KL-Div {}: {}".format(title, depth))
+    ax.set_title("Depth- weighted KL-Div {}: {}".format(title, depth))
 
 def plotExperimentSummary(directory, exp_list, output, depth, suptitle="", save=False):
     no_exp = len(exp_list) + 1        # + 1 for the KL div plot
@@ -145,7 +145,7 @@ def compareTwoTrees(tree_base : qt.Quadtree, tree_comp: qt.Quadtree, idx, d):
     for k in inters:
         base = tree_base[k].getprobabilities()
         comp = tree_comp[k].getprobabilities()
-        l = 1 #tree_base.getlevel(k)
+        l = tree_base.getlevel(k)
         kl += kl_div(base, comp, weight=1/l)
     perc_used = len(inters) / len(full)
     return perc_used, len(full) ,kl
