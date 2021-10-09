@@ -186,7 +186,7 @@ if __name__=="__main__":
     thisdir = os.path.dirname(__file__)
     # a = datetime(2021, 10, 8)
     # outdir_date = a.strftime("%y-%m-%d")
-    defdir = os.path.join(thisdir, '..', 'output', 'hpc', "skip")
+    defdir = os.path.join(thisdir, '..', 'output', "skip")
     args = parse_args(defdir)
     
     f = findexp(args.file, args.input)

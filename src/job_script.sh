@@ -12,20 +12,21 @@ header_4="#PBS -l ncpus=1"
 # conda and directory
 body_1="conda activate robostackenv"
 body_2="cd ~/quadmap/src"
-py_file="bag-test.py"
+py_file="load_multi_tree.py"
 
 # General stuff for the script
-# declare -a StringArray=("sim_hyb-10" "sim_hyb-20")
-search_dir=~/rosbag/pcl
-for m in "$search_dir"/*.bag 
+declare -a StringArray=("sim_hyb-10" "sim_hyb-20" "sim_tgt1-ascend" "sim_tgt1-descend" "sim_tgt2-ascend" "sim_tgt2-descend" "sim_mission-10m" "sim_mission-20m" \
+"exp_tgt1-ascend" "exp_tgt1-descend" "exp_tgt2-ascend" "exp_tgt2-descend" "exp_hyb-freq-20m" "exp_mission-20m")
+numlist=(14 12 10 8 6 4 1)
+
+for e in "${StringArray[@]}" 
 do
-	for i in {1..8}
+	for d in ${numlist[@]}
 	do
-		fname=$(basename "$m" .bag)
-		this_script_file="run_sim_${fname}.sh"
+		this_script_file="plot_${e}_${d}.sh"
 		# HPC required header
 		echo ${header_1} >> ${this_script_file}
-		echo "#PBS -N ${fname}" >> ${this_script_file}
+		echo "#PBS -N plot_${e}_${d}" >> ${this_script_file}
 		echo ${header_2} >> ${this_script_file}
 		echo ${header_3} >> ${this_script_file}
 		echo ${header_4} >> ${this_script_file}
@@ -35,7 +36,7 @@ do
 		echo ${body_2} >> ${this_script_file}
 		
 		# Actual command to execute
-		commandstring="python ${py_file} --file ${fname} --output ../output/skips --input ~/rosbag/pcl -r ${i}"
+		commandstring="python ${py_file} --input ../output/skips --file ${e} -d ${d} -s"
 
 		echo ${commandstring} >> ${this_script_file}
 		echo "running: ${commandstring}"
