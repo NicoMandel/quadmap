@@ -76,49 +76,56 @@ def plot_kl_dict(kl_dict, ax, title, depth):
     # ax.scatter(x, y, 'x')
     ax.set_title("KL-Div {}: {}".format(title, depth))
 
-def plotExperimentSummary(directory, exp_list, output, depth, title="", save=False):
+def plotExperimentSummary(directory, exp_list, output, depth, suptitle="", save=False):
     no_exp = len(exp_list) + 1        # + 1 for the KL div plot
     rs = np.ceil(np.sqrt(no_exp)).astype(np.int)
     cls = np.ceil(no_exp / rs).astype(np.int)
     fig, axs = plt.subplots(rs, cls, figsize=(2*15, 2*9))
     tree_dict = {}
+    # First filling in the dictionary and calculating the KL-div. Then plotting.
     # Plotting all the trees
     for i, f in enumerate(exp_list):
         fname = os.path.join(directory, f)
         exp = regexFilename(f)
-        c = i % cls
-        r = i // cls
         t = qt.Quadtree.load(fname)
         print("loading tree {} done. proceeding with pruning".format(exp))
         t.postprocess(depth=depth)
         # Getting the part for the KL-DIV out
         skip = int(exp.split("-")[-1])
-        fr = getFreq(skip, title)
+        fr = getFreq(skip, suptitle)
         tree_dict[fr] = t
-        # done with KL-DIv dictionary
-        print("pruning tree {} done. Proceeding with plotting".format(exp))
-        t.plot_tree(axs[r,c])
-        axs[r,c].set_title("{} - {} Hz".format(exp, fr))
 
-    # Calculating the kL DIV
-    print("Done with plotting. Getting the KL Divrgence")
+    # Calculating the KL-divergence
     base_freq = 8                # should always be 8! because that's the Hz we wanted
     base_tree = tree_dict[base_freq]
     del tree_dict[base_freq]
     kl_dict = {}
+    kl_stat_dict = {}
     for k, v in tree_dict.items():
-        # TODO: find a way to put the perc_used and full into each axis - work with the title and the key?
         perc_used, full, comp_val = compareTwoTrees(base_tree, tree_comp=v, idx=k, d=depth)
         kl_dict[k] = comp_val
+        kl_stat_dict[k] = (perc_used, full)
+
+    # Plotting section
+    for i, k in enumerate(sorted(tree_dict.keys())):
+        c = i % cls
+        r = i // cls
+        tree_dict[k].plot_tree(axs[r,c])
+        stat = kl_stat_dict[k]
+        title = "{} Hz, {:.1f} % of {} used for comparison".format(k, stat[0]*100, stat[1])
+        axs[r,c].set_title(title)
+    # Calculating the kL DIV
+    print("Done with plotting. Getting the KL Divrgence")
+   
     # plotting the KL-Div in the next element
-    c = len(exp_list)  % cls
-    r = len(exp_list)  // cls
-    plot_kl_dict(kl_dict, axs[r,c], title, depth)
-    
-    plt.suptitle("Experiment: {}, Depth: {}".format(title, depth))
+    c = len(kl_stat_dict)  % cls
+    r = len(kl_stat_dict)  // cls
+    plot_kl_dict(kl_dict, axs[r,c], suptitle, depth)
+   
+    plt.suptitle("Experiment: {}, Depth: {}".format(suptitle, depth))
     plt.tight_layout()
     if save:
-        fn = os.path.join(output,"{}-{}".format(title, depth))
+        fn = os.path.join(output,"{}-{}".format(suptitle, depth))
         print("Saving figure to: {}".format(fn))
         plt.savefig(fn, bbox_inches="tight")
     else:
@@ -186,12 +193,12 @@ if __name__=="__main__":
     thisdir = os.path.dirname(__file__)
     # a = datetime(2021, 10, 8)
     # outdir_date = a.strftime("%y-%m-%d")
-    defdir = os.path.join(thisdir, '..', 'output', "skips")
+    defdir = os.path.join(thisdir, '..', 'output', 'hpc', "skip")
     args = parse_args(defdir)
     
     f = findexp(args.file, args.input)
     # compareexp(args.input, f, args.file, depth=args.depth)
-    plotExperimentSummary(directory=args.input, exp_list = f, output=args.output, depth = args.depth, title=args.file, save=args.save)
+    plotExperimentSummary(directory=args.input, exp_list = f, output=args.output, depth = args.depth, suptitle=args.file, save=args.save)
     # cform = c.strftime("%y-%m-%d")
     # dirtoplot = os.path.abspath(os.path.join(thisdir, '..', 'output', cform))
     # plotdir(dirtoplot)
