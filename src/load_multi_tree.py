@@ -60,21 +60,30 @@ def compareexp(directory, exp_list, title="", depth=10):
     
     return kl_dict
 
-def plot_kl_dict(kl_dict, ax, title, depth):
+def plot_kl_dict(kl_dict, ax, col1_title, col2_title, figtitle, depth):
     
     # ndict = sorted(kl_dict)
     # x = np.asarray(list(ndict.keys()))
     # y = np.asarray(list(ndict.values()))
     x = list(kl_dict.keys())
-    y = list(kl_dict.values())
+    y = np.asarray(list(kl_dict.values()))
     xx = np.column_stack((x, y))
     xy = xx[xx[:,0].argsort()]
-    ax.plot(xy[:,0], xy[:,1])
+    p1 = ax.plot(xy[:,0], xy[:,1], label=col1_title)
+    ax.tick_params(axis='y', labelcolor=p1[0].get_color())
     ax.set_xlabel("Hz")
-    ax.set_ylabel("KL - Div")
+    ax.set_ylabel("KL - Div weighted")
     ax.set_xticks(xy[:,0])
+    # add a new axis object
+    ax1 = ax.twinx()
+    ax1.plot(xy[:,0], xy[:,2], label=col2_title, color='red')
+    ax1.set_ylabel("KL - Div unweighted")
+    ax1.tick_params(axis='y', labelcolor='red')
+
     # ax.scatter(x, y, 'x')
-    ax.set_title("Depth- weighted KL-Div {}: {}".format(title, depth))
+    # ax1.legend()
+    # ax.legend()
+    ax.set_title("KL-Div {}: {}".format(figtitle, depth))    
 
 def plotExperimentSummary(directory, exp_list, output, depth, suptitle="", save=False):
     no_exp = len(exp_list) + 1        # + 1 for the KL div plot
@@ -101,9 +110,12 @@ def plotExperimentSummary(directory, exp_list, output, depth, suptitle="", save=
     del tree_dict[base_freq]
     kl_dict = {}
     kl_stat_dict = {}
+
     for k, v in tree_dict.items():
-        perc_used, full, comp_val = compareTwoTrees(base_tree, tree_comp=v, idx=k, d=depth)
-        kl_dict[k] = comp_val
+        perc_used, full, comp_weighted = compareTwoTrees(base_tree, tree_comp=v, weighted=True)
+        _, _, comp_unweighted = compareTwoTrees(base_tree, tree_comp=v, weighted=False)
+        kl_dict[k] = (comp_weighted, comp_unweighted)
+        # kl_unweighted_dict[k] = comp_unweighted
         kl_stat_dict[k] = (perc_used, full)
 
     # Plotting section
@@ -115,13 +127,13 @@ def plotExperimentSummary(directory, exp_list, output, depth, suptitle="", save=
         title = "{} Hz, {:.1f} % of {} used for comparison".format(k, stat[0]*100, stat[1])
         axs[r,c].set_title(title)
     # Calculating the kL DIV
-    print("Done with plotting. Getting the KL Divrgence")
+    print("Done with plotting. Getting the KL Divergence")
    
     # plotting the KL-Div in the next element
     c = len(kl_stat_dict)  % cls
     r = len(kl_stat_dict)  // cls
-    plot_kl_dict(kl_dict, axs[r,c], suptitle, depth)
-   
+    plot_kl_dict(kl_dict, axs[r,c], "weighted", "unweighted", suptitle, depth)
+    
     plt.suptitle("Experiment: {}, Depth: {}".format(suptitle, depth))
     plt.tight_layout()
     if save:
@@ -132,7 +144,7 @@ def plotExperimentSummary(directory, exp_list, output, depth, suptitle="", save=
         plt.show()
 
 
-def compareTwoTrees(tree_base : qt.Quadtree, tree_comp: qt.Quadtree, idx, d):
+def compareTwoTrees(tree_base : qt.Quadtree, tree_comp: qt.Quadtree, weighted=False):
     """
         ! Base SHOULD be a superclass of the other tree - because the other tree just SKIPS these observations -> assume that the same indices are in there. So iterate over that set of indices and check if they are present in the other dictionary
         ! add the keys that have been checked to a set, so that we can later check how many are NOT in the tree.
@@ -145,10 +157,13 @@ def compareTwoTrees(tree_base : qt.Quadtree, tree_comp: qt.Quadtree, idx, d):
     for k in inters:
         base = tree_base[k].getprobabilities()
         comp = tree_comp[k].getprobabilities()
-        l = tree_base.getlevel(k)
-        kl += kl_div(base, comp, weight=1/l)
+        if weighted:
+            l = tree_base.getlevel(k)
+        else:
+            l = 1.
+        kl += kl_div(base, comp, weight=1./l)
     perc_used = len(inters) / len(full)
-    return perc_used, len(full) ,kl
+    return perc_used, len(full), kl
 
 
 def regexFilename(name):
