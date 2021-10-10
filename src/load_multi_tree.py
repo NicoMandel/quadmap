@@ -128,10 +128,15 @@ def plotExperimentSummary(directory, exp_list, output, depth, suptitle="", save=
         axs[r,c].set_title(title)
     # Calculating the kL DIV
     print("Done with plotting. Getting the KL Divergence")
-   
+    # Plotting the base tree
+    c = (len(exp_list) - 1) % cls
+    r = (len(exp_list) - 1)  // cls
+    base_tree.plot_tree(axs[r,c])
+    axs[r,c].set_title("{} Hz".format(base_freq))
+
     # plotting the KL-Div in the next element
-    c = len(kl_stat_dict)  % cls
-    r = len(kl_stat_dict)  // cls
+    c = len(exp_list)   % cls
+    r = len(exp_list)   // cls
     plot_kl_dict(kl_dict, axs[r,c], "weighted", "unweighted", suptitle, depth)
     
     plt.suptitle("Experiment: {}, Depth: {}".format(suptitle, depth))
