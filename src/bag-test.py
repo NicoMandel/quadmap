@@ -36,20 +36,59 @@ def parse_args(defaultdir):
     parser.add_argument("--output", help="Output directory. Default is ../output", default=defaultdir, type=str)
     parser.add_argument("--file", help="Input Filename. Used to read input from input directory and create equivalent output", type=str)
     parser.add_argument("-r", "--rate", default=8, type=int, help="The rate, at which values should be inserted into the Quadtree. Will use integer divide for this")
+    parser.add_argument("-t", "--take", help="Take the .csv file or use the values calculated by hand. To compare files with one another.", action="store_false", default=True)
     args = parser.parse_args()
     return args
 
-def find_dimensions(directory, experiment):
+def find_dimensions(directory, experiment, take_csv : bool):
 
-    fname = os.path.expanduser(os.path.join(directory, experiment+".csv"))
-    df = pd.read_csv(fname)
-    min_x = df.at[0,"min_x"]
-    min_y = df.at[0, "min_y"]
-    max_x = df.at[0, "max_x"]
-    max_y = df.at[0, "max_y"]
-    x_scale = max_x - min_x -1.
-    y_scale = max_y - min_y - 1.
-    scale = max(x_scale, y_scale) + 1.
+    if take_csv:
+        fname = os.path.expanduser(os.path.join(directory, experiment+".csv"))
+        df = pd.read_csv(fname)
+        min_x = df.at[0,"min_x"]
+        min_y = df.at[0, "min_y"]
+        max_x = df.at[0, "max_x"]
+        max_y = df.at[0, "max_y"]
+        x_scale = max_x - min_x -1.
+        y_scale = max_y - min_y - 1.
+        scale = max(x_scale, y_scale) + 1.
+    else:
+        if "sim" in experiment:
+            if "tgt1" in experiment:
+                min_x = -43
+                min_y = -1
+                scale = 41
+            elif "tgt2" in experiment:
+                min_x = -63
+                min_y = 9
+                scale = 40
+            elif "mission" in experiment:
+                min_x = -86
+                min_y = -10
+                scale = 90
+            else: #hybrid
+                min_x = -93
+                min_y = -16
+                scale = 94
+        # experiments
+        else:
+            if "tgt1" in experiment:
+                min_x = -31
+                min_y = -21
+                scale = 47
+            elif "tgt2" in experiment:
+                min_x = - 58
+                min_y = - 11
+                scale = 57
+            elif "mission" in experiment:
+                min_x = -72
+                min_y = -31
+                scale = 94
+            else:
+                min_x = -85
+                min_y = -30
+                scale = 255
+
     return int(min_x), int(min_y), int(scale)
 
 
@@ -80,7 +119,7 @@ if __name__=="__main__":
     max_depth = args.depth
 
     # Getting the right dimensions
-    lowx, lowy, scale = find_dimensions(args.input, args.file)
+    lowx, lowy, scale = find_dimensions(args.input, args.file, args.take)
     low = (lowx, lowy)
 
     tree = qt.Quadtree(low=low, scale=scale, max_depth=max_depth)
@@ -104,7 +143,7 @@ if __name__=="__main__":
         with rosbag.Bag(bagf, 'r') as bag:
             duration = bag.get_end_time() - bag.get_start_time()
 
-            for (topic, msg, ts) in tqdm(bag.read_messages(topics=pcl_topic), desc='progress', total=int(bag.get_message_count(topic_filters=pcl_topic) / rate)):
+            for (topic, msg, ts) in tqdm(bag.read_messages(topics=pcl_topic), desc='progress', total=bag.get_message_count(topic_filters=pcl_topic)):
                 ctr += 1
                 # only process every X-th image.
                 if ctr % rate == 0:                    
@@ -117,7 +156,7 @@ if __name__=="__main__":
                     idcs = tree.insertion_idcs(pts, img_width, img_height)
                     tree.insert_points_arr(values=val_dict.values(), idcs = idcs)
     except FileNotFoundError: raise
-    
+
     try:
         # output saving
         f = "{}-qt-{}-{}-{}-{}.pkl".format(args.file, rate, max_depth, low, scale)
