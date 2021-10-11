@@ -1,3 +1,5 @@
+from warnings import simplefilter
+from numpy.core.numeric import indices
 import quadtree as qt
 import os
 import glob
@@ -6,6 +8,7 @@ import numpy as np
 from datetime import datetime
 from argparse import ArgumentParser
 import re
+import pandas as pd
 
 def plotdir(dirtoplot):
     file_list = glob.glob(dirtoplot + "/*.pkl")
@@ -53,15 +56,16 @@ def clean_filename(f: str):
     out2 = re.search(r'^.*(?=(\-qt-(\d{1,2})))', f.split("_")[1])
     mm = out2.group()
     # Splitting up into "mode" and "experiment type"
-    mmm = mm.split("-")
-    exp_type = mmm[0]
-    exp_setting = mmm[1]
+    # ? potentially use later - currently not 100 % necessary
+    # mmm = mm.split("-")
+    # exp_type = mmm[0]
+    # exp_setting = mmm[1]
     # mode = out.group()
     # Converting the frequency
     out = re.search(r'qt-(\d{1,2})', f.split("_")[1])
     hz = out.group().split("-")[1]
     hz = getFreq(int(hz),sim)
-    return sim, exp_type, exp_setting, hz
+    return sim, mm, hz
 
 def resolvename(f):
     fname = f.split("/")[-1]
@@ -117,68 +121,72 @@ def plot_kl_dict(kl_dict, ax, col1_title, col2_title, figtitle, depth):
     # ax.legend()
     ax.set_title("KL-Div {}: {}".format(figtitle, depth))    
 
-def plotExperimentSummary(directory, exp_list, output, depth, suptitle="", save=False):
-    no_exp = len(exp_list) + 1        # + 1 for the KL div plot
-    rs = np.ceil(np.sqrt(no_exp)).astype(np.int)
-    cls = np.ceil(no_exp / rs).astype(np.int)
-    fig, axs = plt.subplots(rs, cls, figsize=(2*15, 2*9))
+def plotExperimentSummary(directory : str, exp_dictionary: dict, output, depth : int, suptitle : str="" , save : bool =False, base_freq = 8):
+    no_exp = len(exp_dictionary) + 1        # + 1 for the KL div plot
+    fig = plt.figure(figsize=(15, 9))
+    ax = fig.gca()
+    settings_list = []
+    hz_list = []
+    for v in exp_dictionary.values():
+        settings_list.append(v[1])
+        hz_list.append(v[2])
+    settings = set(settings_list)
+    hz = set(hz_list)
+    # Group experiments. do a dataframe.
+    hz.remove(base_freq)
+    df = pd.DataFrame(index=hz, columns=settings)
+    stat_df = pd.DataFrame(index = hz, columns = settings)
     tree_dict = {}
     # First filling in the dictionary and calculating the KL-div. Then plotting.
     # Plotting all the trees
-    for i, f in enumerate(exp_list):
-        fname = os.path.join(directory, f)
-        exp = regexFilename(f)
-        t = qt.Quadtree.load(fname)
-        print("loading tree {} done. proceeding with pruning".format(exp))
-        t.postprocess(depth=depth)
-        # Getting the part for the KL-DIV out
-        skip = int(exp.split("-")[-1])
-        fr = getFreq(skip, suptitle)
-        tree_dict[fr] = t
+    asdfa = 0
+    for setting in settings:
+        # # ! quick breaker:
+        # if asdfa == 1:
+        #     break
+        # asdfa += 1
 
-    # Calculating the KL-divergence
-    base_freq = 8                # should always be 8! because that's the Hz we wanted
-    base_tree = tree_dict[base_freq]
-    del tree_dict[base_freq]
-    kl_dict = {}
-    kl_stat_dict = {}
+        fnames = [k for k in exp_dictionary.keys() if setting in k]
+        for f in fnames:
+            fname = os.path.join(directory, f)
+            t = qt.Quadtree.load(fname)
+            print("loading tree {} done. proceeding with pruning".format(exp_dictionary[f]))
+            t.postprocess(depth=depth)
+            # Getting the part for the KL-DIV out
+            fr = exp_dictionary[f][2]
+            tree_dict[fr] = t
 
-    for k, v in tree_dict.items():
-        perc_used, full, comp_weighted = compareTwoTrees(base_tree, tree_comp=v, weighted=True)
-        _, _, comp_unweighted = compareTwoTrees(base_tree, tree_comp=v, weighted=False)
-        kl_dict[k] = (comp_weighted, comp_unweighted)
-        # kl_unweighted_dict[k] = comp_unweighted
-        kl_stat_dict[k] = (perc_used, full)
+        # Calculating the KL-divergence
+        base_tree = tree_dict[base_freq]
+        del tree_dict[base_freq]
 
-    # Plotting section
-    for i, k in enumerate(sorted(tree_dict.keys())):
-        c = i % cls
-        r = i // cls
-        tree_dict[k].plot_tree(axs[r,c])
-        stat = kl_stat_dict[k]
-        title = "{} Hz, {:.1f} % of {} used for comparison".format(k, stat[0]*100, stat[1])
-        axs[r,c].set_title(title)
-    # Calculating the kL DIV
-    print("Done with plotting. Getting the KL Divergence")
-    # Plotting the base tree
-    c = (len(exp_list) - 1) % cls
-    r = (len(exp_list) - 1)  // cls
-    base_tree.plot_tree(axs[r,c])
-    axs[r,c].set_title("{} Hz".format(base_freq))
+        for k, v in tree_dict.items():
+            perc_used, full, comp_unweighted = compareTwoTrees(base_tree, tree_comp=v, weighted=False)
+            df.at[k, setting] = comp_unweighted
+            # kl_unweighted_dict[k] = comp_unweighted
+            stat_df.at[k, setting] = (perc_used, full)
 
-    # plotting the KL-Div in the next element
-    c = len(exp_list)   % cls
-    r = len(exp_list)   // cls
-    plot_kl_dict(kl_dict, axs[r,c], "weighted", "unweighted", suptitle, depth)
-    
-    plt.suptitle("Experiment: {}, Depth: {}".format(suptitle, depth))
+    # print(df)
+    df_path = os.path.join(output, suptitle + "_kl_div.csv")
+    df.to_csv(df_path)
+    stat_df_path = os.path.join(output, suptitle + "_kl_div_stats.csv")
+    stat_df.to_csv(stat_df_path)
+    df.plot(ax=ax)
+    plt.show()
+
+def plotFromCsv(directory, name):
+    """
+        Potentially change the linestyles like this: https://stackoverflow.com/questions/14178194/python-pandas-plotting-options-for-multiple-lines
+    """
+    fpath1 = os.path.join(directory, "exp_" + name +".csv")
+    df1 = pd.read_csv(fpath1, index_col=0)
+    fpath2 = os.path.join(directory, "sim_" + name +".csv")
+    df2 = pd.read_csv(fpath2, index_col=0)
+    fig, ax = plt.subplots(1, 2, sharey=True)
+    df1.plot(ax=ax[0], title="exp")
+    df2.plot(ax=ax[1], title="sim")
     plt.tight_layout()
-    if save:
-        fn = os.path.join(output,"{}-{}".format(suptitle, depth))
-        print("Saving figure to: {}".format(fn))
-        plt.savefig(fn, bbox_inches="tight")
-    else:
-        plt.show()
+    plt.show()
 
 
 def compareTwoTrees(tree_base : qt.Quadtree, tree_comp: qt.Quadtree, weighted=False):
@@ -251,7 +259,8 @@ if __name__=="__main__":
     f = findexp(args.file, args.input)
     fdict = clean_filelist(f)
     # compareexp(args.input, f, args.file, depth=args.depth)
-    plotExperimentSummary(directory=args.input, exp_list = f, output=args.output, depth = args.depth, suptitle=args.file, save=args.save)
+    # plotExperimentSummary(directory=args.input, exp_dictionary = fdict, output=args.output, depth = args.depth, suptitle=args.file, save=args.save)
+    plotFromCsv(args.output, "kl_div")
     # cform = c.strftime("%y-%m-%d")
     # dirtoplot = os.path.abspath(os.path.join(thisdir, '..', 'output', cform))
     # plotdir(dirtoplot)
