@@ -19,7 +19,7 @@ py_file="bag-test.py"
 search_dir=~/rosbag/pcl
 for m in "$search_dir"/*.bag 
 do
-	for i in {2..8}
+	for i in {1..8}
 	do
 		fname=$(basename "$m" .bag)
 		this_script_file="run_sim_${fname}.sh"
