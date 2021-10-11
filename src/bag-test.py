@@ -62,14 +62,10 @@ def find_dimensions(directory, experiment, take_csv : bool):
                 min_x = -63
                 min_y = 9
                 scale = 40
-            elif "mission" in experiment:
-                min_x = -86
-                min_y = -10
-                scale = 90
-            else: #hybrid
+            else: #hybrid and Mission
                 min_x = -93
                 min_y = -16
-                scale = 94
+                scale = 96
         # experiments
         else:
             if "tgt1" in experiment:
@@ -80,14 +76,10 @@ def find_dimensions(directory, experiment, take_csv : bool):
                 min_x = - 58
                 min_y = - 11
                 scale = 57
-            elif "mission" in experiment:
-                min_x = -72
-                min_y = -31
-                scale = 94
             else:
                 min_x = -85
-                min_y = -30
-                scale = 255
+                min_y = -31
+                scale = 256
 
     return int(min_x), int(min_y), int(scale)
 
