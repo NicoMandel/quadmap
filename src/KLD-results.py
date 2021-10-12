@@ -198,6 +198,11 @@ def compareKLDSimilar(directory: str, fdict: dict, similarity : str, depth : int
         tgt_dict = {k:v for k,v in fdict.items() if sim[0] in v[1]}
     else:
         tgt_dict = {k:v for k,v in fdict.items() if "tgt" not in v[1]}
+        # dirty fix for comparing hyb-10 and hyb-20
+        if "10" in similarity:
+            tgt_dict = {k:v for k,v in fdict.items() if ("tgt" not in v[1]) and ("10" in v[1])}
+        elif "20" in similarity:
+            tgt_dict = {k:v for k,v in fdict.items() if ("tgt" not in v[1]) and ("20" in v[1])}
     
     # the baseline:
     basel_dict = getBaselineSim(tgt_dict, similarity)
@@ -279,6 +284,40 @@ def compareTwoTrees(tree_base : qt.Quadtree, tree_comp: qt.Quadtree, weighted=Fa
     perc_used = len(inters) / len(full)
     return perc_used, len(full), kl
 
+def summarizecsv(dir):
+    read_dir = os.path.join(dir, "csv")
+    flist = [f for f in glob.glob(read_dir+ "/*.csv")]
+    ddict = {}
+    for f in flist:
+        bname = os.path.basename(f).split(".")[0]
+        df = pd.read_csv(f, index_col=0)
+        ddict[bname] = df
+    
+    outfname = "summary.xlsx"
+    outf = os.path.join(read_dir, outfname)
+    with pd.ExcelWriter(outf) as writer:
+        for k, df in ddict.items():
+            df.to_excel(writer, sheet_name=k)
+
+def celladjustKLD(directory, fname):
+    f = os.path.join(directory, fname)
+    xlf = pd.ExcelFile(f)
+    dfd = {}
+    for sheet_name in xlf.sheet_names:
+        dfd[sheet_name] = xlf.parse(sheet_name, index_col=0)
+    xlf.close()
+    print("read the df")
+
+    # make a new column
+    for sheet, df in dfd.items():
+        df["used_c"] = df["perc"] * df["full"]
+        df["Weighted_KLD"] = df["KL"] / df["used_c"]
+        df.sort_values(by=["Weighted_KLD", "freq"], inplace=True)
+    
+    outf = os.path.join(directory, "adjustedKLD.xlsx")
+    with pd.ExcelWriter(outf) as writer:
+        for sheet, df in dfd.items():
+            df.to_excel(writer, sheet_name=sheet)
 
 def regexFilename(name):
     out = re.search(r'qt-(\d{1,2})',name)
@@ -315,7 +354,7 @@ def parse_args(defaultdir):
     parser.add_argument("--file", help="Input Experiment. Used to read the file which contains the string given by file from input directory. If not specified will raise FileNotFoundError", type=str, default="sim")
     parser.add_argument("-s", "--save", help="Whether to save or plot the diagram", action="store_true", default=False)
     parser.add_argument("--output", help="Output directory where to save the figures if save is set. Default is this directory + ../output/hpc", default=defdir)
-    parser.add_argument("--similarity", help="Which similarity should be evaluated", type=str, default="tgt2")
+    parser.add_argument("--similarity", help="Which similarity should be evaluated", type=str, default="hyb-20")
     args = parser.parse_args()
     return args
 
@@ -331,7 +370,10 @@ if __name__=="__main__":
     # compareexp(args.input, f, args.file, depth=args.depth)
     # plotExperimentSummary(directory=args.input, exp_dictionary = fdict, output=args.output, depth = args.depth, suptitle=args.file, save=args.save)
     # plotFromCsv(args.output, "kl_div")
-    compareKLDSimilar(defdir, fdict, args.similarity, depth=args.depth)
+    # compareKLDSimilar(defdir, fdict, args.similarity, depth=args.depth)
+    # summarizecsv(args.input)
+    csvdir = os.path.join(defdir, "csv")
+    celladjustKLD(csvdir, "summary-cleaned.xlsx")
     # cform = c.strftime("%y-%m-%d")
     # dirtoplot = os.path.abspath(os.path.join(thisdir, '..', 'output', cform))
     # plotdir(dirtoplot)
