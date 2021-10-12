@@ -1,5 +1,4 @@
-from warnings import simplefilter
-from numpy.core.numeric import indices
+
 import quadtree as qt
 import os
 import glob
@@ -9,6 +8,7 @@ from datetime import datetime
 from argparse import ArgumentParser
 import re
 import pandas as pd
+from tqdm import tqdm
 
 def plotdir(dirtoplot):
     file_list = glob.glob(dirtoplot + "/*.pkl")
@@ -189,6 +189,70 @@ def plotFromCsv(directory, name):
     plt.show()
 
 
+def compareKLDSimilar(directory: str, fdict: dict, similarity : str, depth : int = 10):
+    """
+        Function to compare similar research. 
+    """
+    sim = getSimilarity(similarity)
+    tgt_dict = {k:v for k,v in fdict.items() if sim[0] in v[1]}
+    # the baseline:
+    basel_dict = getBaselineSim(tgt_dict, similarity)
+    df = pd.DataFrame(index=tgt_dict.keys(), columns=["KL", "perc","full", "case", "motion", "freq"])
+    basel_fname = list(basel_dict.keys())[0]
+    basel_f = os.path.join(directory, basel_fname)
+    basel_tree = qt.Quadtree.load(basel_f)
+    basel_tree.postprocess(depth=depth)
+    for k,v in tqdm(tgt_dict.items()):
+        fname = os.path.join(directory, k)
+        tree = qt.Quadtree.load(fname)
+        tree.postprocess(depth=depth)
+        perc_used, full, kl = compareTwoTrees(basel_tree, tree)
+        df.at[k, "KL"] = kl
+        df.at[k, "perc"] = perc_used
+        df.at[k, "full"] = full
+        df.at[k, "case"] = v[0]
+        df.at[k, "motion"] = v[1]
+        df.at[k, "freq"] = v[2]
+    df.sort_values(by=["KL", "freq"], inplace=True)
+    print(df)
+    out_f = "_".join([basel_dict[basel_fname][0],basel_dict[basel_fname][1]])
+    out_fname = os.path.join(directory, out_f +".csv")
+    df.to_csv(out_fname)
+
+
+
+def getSimilarity(similarity : str) -> tuple:
+    """
+        Function to get the association of what things are considered similar
+    """
+    if "tgt" in similarity:
+        if "tgt1" in similarity:
+            tgt = "tgt1"
+        else:
+            tgt = "tgt2"
+        return (tgt, "ascend", "descend")
+    else:
+        if "20" in similarity:
+            hgt = 20
+        elif "10" in similarity:
+            hgt = 10
+        return (hgt, "mission", "hyb")
+
+def getBaselineSim(tgt_dict : dict, similarity : str):
+    """
+        Function to remove the baseline from the tgt_dict and return it
+    """
+    case = tgt_dict[list(tgt_dict.keys())[0]]
+    base_freq = 8
+    if 'scend' in case[1]:
+        miss =  "-".join([similarity, "descend"])
+    else:
+        # TODO: fill this in
+        miss = "hybrid"
+    base_tree_dict = {k: v for k, v in tgt_dict.items() if (miss in v[1]) and (base_freq == v[2])}
+    del tgt_dict[list(base_tree_dict.keys())[0]]
+    return base_tree_dict
+
 def compareTwoTrees(tree_base : qt.Quadtree, tree_comp: qt.Quadtree, weighted=False):
     """
         ! Base SHOULD be a superclass of the other tree - because the other tree just SKIPS these observations -> assume that the same indices are in there. So iterate over that set of indices and check if they are present in the other dictionary
@@ -245,24 +309,26 @@ def parse_args(defaultdir):
     parser.add_argument("--input", help="Input directory. Default is the one of the file", type=str, default=defaultdir)
     parser.add_argument("--file", help="Input Experiment. Used to read the file which contains the string given by file from input directory. If not specified will raise FileNotFoundError", type=str, default="sim")
     parser.add_argument("-s", "--save", help="Whether to save or plot the diagram", action="store_true", default=False)
-    parser.add_argument("--output", help="Output directory where to save the figures if save is set. Default is input + imgs", default=os.path.join(defaultdir, "imgs"))
+    parser.add_argument("--output", help="Output directory where to save the figures if save is set. Default is this directory + ../output/hpc", default=defdir)
+    parser.add_argument("--similarity", help="Which similarity should be evaluated", type=str, default="tgt2")
     args = parser.parse_args()
     return args
 
 if __name__=="__main__":
     thisdir = os.path.dirname(__file__)
-    # a = datetime(2021, 10, 8)
-    # outdir_date = a.strftime("%y-%m-%d")
-    defdir = os.path.join(thisdir, '..', 'output', 'hpc', "skip")
+    a = datetime(2021, 10, 11)
+    outdir_date = a.strftime("%y-%m-%d")
+    defdir = os.path.join(thisdir, '..', 'output', 'hpc', outdir_date)
     args = parse_args(defdir)
     
     f = findexp(args.file, args.input)
     fdict = clean_filelist(f)
     # compareexp(args.input, f, args.file, depth=args.depth)
     # plotExperimentSummary(directory=args.input, exp_dictionary = fdict, output=args.output, depth = args.depth, suptitle=args.file, save=args.save)
-    plotFromCsv(args.output, "kl_div")
+    # plotFromCsv(args.output, "kl_div")
+    compareKLDSimilar(defdir, fdict, args.similarity, depth=args.depth)
     # cform = c.strftime("%y-%m-%d")
     # dirtoplot = os.path.abspath(os.path.join(thisdir, '..', 'output', cform))
     # plotdir(dirtoplot)
     
-    print("Plotting done")
+    print("Results done")
