@@ -178,13 +178,57 @@ def plotFromCsv(directory, name):
     """
         Potentially change the linestyles like this: https://stackoverflow.com/questions/14178194/python-pandas-plotting-options-for-multiple-lines
     """
-    fpath1 = os.path.join(directory, "exp_" + name +".csv")
+    plt.rcParams.update({'font.family': 'sans-serif', 'font.weight' : 'bold' , # 'font.size': 20,
+                        'axes.titlesize': 'x-large', 'axes.labelsize' : 'large', 'axes.titleweight' : "bold", 'axes.labelweight': 'bold',
+                        'figure.titleweight' : 'bold', 'figure.titlesize': 'xx-large'})
+
+    # get the default color cycle:
+    c_cycle = plt.rcParams['axes.prop_cycle'].by_key()['color']
+    # 8 in simulations, 6 in experiments
+    fpath1 = os.path.join(directory, "skip", "imgs", "exp_" + name +".csv")
     df1 = pd.read_csv(fpath1, index_col=0)
-    fpath2 = os.path.join(directory, "sim_" + name +".csv")
+    fpath2 = os.path.join(directory, "skip", "imgs", "sim_" + name +".csv")
     df2 = pd.read_csv(fpath2, index_col=0)
     fig, ax = plt.subplots(1, 2, sharey=True)
-    df1.plot(ax=ax[0], title="exp")
-    df2.plot(ax=ax[1], title="sim")
+    for i, df in enumerate([df1, df2]):
+        for col in df.columns:
+            if "tgt1" in col:
+                c = c_cycle[0]
+                if 'ascend' in col:
+                    st='o-'
+                else:
+                    st='x-.'
+            elif "tgt2" in col:
+                c= c_cycle[1]
+                if 'ascend' in col:
+                    st='o-'
+                else:
+                    st='x-.'
+            elif "10" in col:
+                c = c_cycle[2]
+                if "mission" in col:
+                    st="^--"
+                else:
+                    st="+-."
+            else:
+                c = c_cycle[3]
+                if "mission" in col:
+                    st="^-."
+                else:
+                    st="+-."
+            # style = "".join([c, st])
+            style=st
+            df[col].plot(ax=ax[i], style=style, color=c)
+        
+        ax[i].set_xlabel("Frequency [Hz]")
+        ax[0].set_ylabel("KLD")
+
+        ax[i].legend()
+        # df1.plot()
+    # df1.plot(ax=ax[0], title="exp")
+    # df2.plot(ax=ax[1], title="sim")
+    ax[0].set_title("Experiments")
+    ax[1].set_title("Simulations")
     plt.tight_layout()
     plt.show()
 
@@ -362,18 +406,18 @@ if __name__=="__main__":
     thisdir = os.path.dirname(__file__)
     a = datetime(2021, 10, 11)
     outdir_date = a.strftime("%y-%m-%d")
-    defdir = os.path.join(thisdir, '..', 'output', 'hpc', outdir_date)
+    defdir = os.path.join(thisdir, '..', 'output', 'hpc' )#, outdir_date, 'csv')
     args = parse_args(defdir)
     
     f = findexp(args.file, args.input)
     fdict = clean_filelist(f)
     # compareexp(args.input, f, args.file, depth=args.depth)
     # plotExperimentSummary(directory=args.input, exp_dictionary = fdict, output=args.output, depth = args.depth, suptitle=args.file, save=args.save)
-    # plotFromCsv(args.output, "kl_div")
+    plotFromCsv(args.output, "kl_div")
     # compareKLDSimilar(defdir, fdict, args.similarity, depth=args.depth)
     # summarizecsv(args.input)
     csvdir = os.path.join(defdir, "csv")
-    celladjustKLD(csvdir, "summary-cleaned.xlsx")
+    # celladjustKLD(csvdir, "summary-cleaned.xlsx")
     # cform = c.strftime("%y-%m-%d")
     # dirtoplot = os.path.abspath(os.path.join(thisdir, '..', 'output', cform))
     # plotdir(dirtoplot)

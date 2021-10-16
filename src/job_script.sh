@@ -1,7 +1,7 @@
 #!/bin/bash -l
 
 # These are the limits for the hpc script
-memory_limit="6000mb"
+memory_limit="5000mb"
 time_limit="18:00:00"
 header_1="#!/bin/bash -l"
 header_2="#PBS -l walltime=${time_limit}"
